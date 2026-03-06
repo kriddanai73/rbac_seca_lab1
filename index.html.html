@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asset & Organization Management System</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- เพิ่มไลบรารี SheetJS สำหรับจัดการไฟล์ Excel (.xlsx) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; color: #1e293b; }
+    .chart-container { position: relative; width: 100%; height: 250px; }
+    .sidebar-link.active { background-color: #3b82f6; color: white; }
+    .status-badge { padding: 2px 8px; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
+    .fade-in { animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    #login-page { background-color: #0f172a; position: fixed; inset: 0; overflow: hidden; }
+    
+    /* 🎨 Animations for Glassmorphism Background */
+    @keyframes blob {
+      0% { transform: translate(0px, 0px) scale(1); }
+      33% { transform: translate(30px, -50px) scale(1.1); }
+      66% { transform: translate(-20px, 20px) scale(0.9); }
+      100% { transform: translate(0px, 0px) scale(1); }
+    }
+    .animate-blob { animation: blob 7s infinite; }
+    .animation-delay-2000 { animation-delay: 2s; }
+    .animation-delay-4000 { animation-delay: 4s; }
+    
+    .asset-img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; background-color: #f1f5f9; }
+    .asset-img-large { width: 100%; height: 150px; object-fit: cover; border-radius: 12px; margin-bottom: 1rem; border: 1px solid #e2e8f0; }
+    .scroll-hide::-webkit-scrollbar { display: none; }
+    .category-chip { cursor: pointer; transition: all 0.2s; border: 1px solid #e2e8f0; }
+    .category-chip.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+    .tag { display:inline-flex; align-items:center; gap:6px; padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; border: 1px solid #e2e8f0; background:#fff; color:#334155;}
+
+    html, body{ width:100%; max-width:100%; overflow-x:hidden; }
+    #app-layout{ width:100%; min-height:100vh; }
+    @media (min-width: 768px){
+      #app-layout{ display:flex !important; }
+      main{ flex:1 !important; width:auto !important; display:block !important; }
+      main > div{ width:100% !important; max-width:none !important; margin:0 !important; }
+    }
+    @media (max-width: 767px){
+      #app-layout{ display:block !important; }
+      main{ width:100% !important; overflow-x:hidden; }
+      main > div{ width:100% !important; max-width:480px !important; margin:0 auto !important; }
+    }
+
+    .tl { position: relative; padding-left: 18px; }
+    .tl:before { content:""; position:absolute; left:7px; top:6px; bottom:6px; width:2px; background:#e2e8f0; }
+    .tl-item { position: relative; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; margin-bottom: 10px; }
+    .tl-item:before { content:""; position:absolute; left:-15px; top:18px; width:10px; height:10px; border-radius:999px; background:#3b82f6; border:2px solid #fff; box-shadow:0 0 0 2px #e2e8f0; }
+    .tl-meta { font-size: 11px; color:#64748b; font-weight:700; }
+    .tl-desc { font-size: 12px; color:#334155; margin-top: 4px; line-height: 1.5; }
+    .pill { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px; border: 1px solid #e2e8f0; background:#f8fafc; color:#334155; }
+
+    :root { --app-h: 100dvh; }
+    @supports not (height: 100dvh) { :root { --app-h: 100vh; } }
+    #app-layout { min-height: var(--app-h); }
+    .safe-area { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+  </style>
+</head>
+
+<body class="antialiased">
+
+  <!-- Custom Toast Container -->
+  <div id="custom-toast-container" class="fixed top-4 right-4 z-[4000] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Custom Dialog -->
+  <div id="custom-dialog" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[3000] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-200">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200" id="custom-dialog-panel">
+      <div class="p-6 text-center">
+        <div id="custom-dialog-icon" class="text-5xl mb-4">ℹ️</div>
+        <h3 id="custom-dialog-title" class="text-xl font-extrabold text-slate-800 mb-2">Title</h3>
+        <div id="custom-dialog-message" class="text-sm text-slate-600 mb-6 leading-relaxed">Message</div>
+        <div class="flex gap-3 justify-center" id="custom-dialog-buttons"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Screen (For Google Sheets Fetching) -->
+  <div id="full-page-loader" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[2000] hidden flex flex-col items-center justify-center text-white">
+    <div class="animate-spin text-5xl mb-4">⚙️</div>
+    <div class="font-bold tracking-widest animate-pulse">กำลังโหลดข้อมูลจาก Google Sheets...</div>
+  </div>
+
+  <!-- Sync Toast Notification -->
+  <div id="sync-toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 z-[1500] transition-all duration-300 transform translate-y-full opacity-0">
+    <div class="animate-spin">🔄</div>
+    <div class="text-sm font-bold tracking-wide">กำลังซิงค์ข้อมูลกับ Sheets...</div>
+  </div>
+
+  <!-- Premium Login Page (Glassmorphism) -->
+  <div id="login-page" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <!-- Abstract Background Blobs -->
+    <div class="absolute top-[-10%] left-[-10%] w-72 md:w-96 h-72 md:h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
+    <div class="absolute top-[20%] right-[-10%] w-72 md:w-96 h-72 md:h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
+    <div class="absolute bottom-[-20%] left-[20%] w-72 md:w-96 h-72 md:h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-4000"></div>
+
+    <!-- Glass Card -->
+    <div class="relative bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] w-full max-w-md overflow-hidden transition-all duration-500 transform hover:scale-[1.02]">
+      <div class="p-8 text-center border-b border-white/10 relative">
+        <button onclick="showGasSetup()" class="absolute top-4 right-4 backend-badge bg-white/20 backdrop-blur text-white text-[10px] font-extrabold px-3 py-1.5 rounded-full hover:bg-white/30 transition shadow-sm">
+          💻 Local Data
+        </button>
+        <div class="text-5xl mb-4 drop-shadow-lg">📦</div>
+        <h2 class="text-3xl font-extrabold text-white tracking-wider drop-shadow-md">ASSET-PRO</h2>
+        <p class="text-blue-100 text-sm mt-2 opacity-90">ระบบจัดการสินทรัพย์และโครงสร้างองค์กร</p>
+      </div>
+      <form id="login-form" class="p-8 space-y-5" onsubmit="handleLogin(event)">
+        <div>
+          <label class="block text-sm font-semibold text-white mb-2 drop-shadow">ชื่อผู้ใช้งาน</label>
+          <input type="text" id="login-username" required class="w-full px-4 py-3 bg-white/10 border border-white/20 text-white placeholder-white/50 rounded-xl focus:bg-white/20 focus:ring-2 focus:ring-blue-400 outline-none transition" placeholder="admin หรือ staff">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-white mb-2 drop-shadow">รหัสผ่าน</label>
+          <input type="password" id="login-password" required class="w-full px-4 py-3 bg-white/10 border border-white/20 text-white placeholder-white/50 rounded-xl focus:bg-white/20 focus:ring-2 focus:ring-blue-400 outline-none transition" placeholder="••••">
+        </div>
+        <button type="submit" id="login-btn" class="w-full relative flex justify-center items-center py-3.5 mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-extrabold text-lg hover:from-blue-500 hover:to-indigo-500 transition shadow-lg shadow-blue-900/50 overflow-hidden group">
+          <span id="login-btn-text" class="relative z-10 transition-transform">เข้าสู่ระบบ</span>
+          <svg id="login-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden relative z-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App Layout -->
+  <div id="app-layout" class="flex min-h-screen overflow-hidden hidden">
+
+    <!-- Sidebar (Desktop) -->
+    <aside class="w-64 bg-slate-900 text-slate-300 hidden md:flex flex-col shrink-0">
+      <div class="p-6">
+        <h1 class="text-xl font-bold text-white flex items-center gap-2">📦 ASSET-PRO</h1>
+        <p id="user-role-display" class="text-[10px] text-blue-400 mt-1 uppercase tracking-widest font-bold">MODE</p>
+      </div>
+
+      <nav class="flex-1 px-4 space-y-2">
+        <button onclick="showSection('dashboard')" id="nav-dashboard" class="sidebar-link active w-full flex items-center gap-3 px-4 py-3 rounded-lg transition text-sm text-left">
+          <span>📊</span> แดชบอร์ด
+        </button>
+        <button onclick="showSection('assets')" id="nav-assets" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg transition text-sm text-left">
+          <span>📋</span> รายการสินทรัพย์
+        </button>
+        <button onclick="showSection('employees')" id="nav-employees" class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg transition text-sm text-left">
+          <span>🏢</span> โครงสร้างองค์กร
+        </button>
+        <button onclick="showSection('users')" id="nav-users" data-admin-only class="sidebar-link w-full flex items-center gap-3 px-4 py-3 rounded-lg transition text-sm text-left">
+          <span>👥</span> ผู้ใช้งาน
+        </button>
+      </nav>
+
+      <div class="p-4 border-t border-slate-800 space-y-2">
+        <button onclick="showGasSetup()" class="backend-badge w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white font-bold text-xs transition">
+          💻 Local Data
+        </button>
+        <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-red-400 hover:bg-red-500/10 transition text-sm">
+          <span>🚪</span> ออกจากระบบ
+        </button>
+      </div>
+    </aside>
+
+    <!-- Mobile Topbar -->
+    <header class="md:hidden sticky top-0 z-50 bg-white/95 backdrop-blur border-b safe-area">
+      <div class="flex items-center justify-between px-4 py-3">
+        <button onclick="toggleMobileNav(true)" class="px-3 py-2 rounded-lg border text-sm font-extrabold">☰ เมนู</button>
+        <div class="font-extrabold text-slate-800">📦 ASSET-PRO</div>
+        <div class="flex items-center gap-1">
+          <button onclick="showGasSetup()" class="backend-badge text-[10px] font-extrabold px-2 py-1.5 rounded bg-slate-100 text-slate-600">💻 Local</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mobile Drawer -->
+    <div id="mobile-nav" class="md:hidden fixed inset-0 z-[500] hidden">
+      <div class="absolute inset-0 bg-black/50" onclick="toggleMobileNav(false)"></div>
+      <div class="absolute left-0 top-0 bottom-0 w-[78%] max-w-xs bg-slate-900 text-slate-200 p-4 safe-area">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="text-white font-extrabold">📦 ASSET-PRO</div>
+            <div id="mobile-role-display" class="text-[10px] text-blue-400 mt-1 uppercase tracking-widest font-bold">—</div>
+          </div>
+          <button onclick="toggleMobileNav(false)" class="text-white/70 text-xl">✕</button>
+        </div>
+        <div class="space-y-2">
+          <button onclick="showSection('dashboard'); toggleMobileNav(false)" class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10 font-bold text-sm">📊 แดชบอร์ด</button>
+          <button onclick="showSection('assets'); toggleMobileNav(false)" class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10 font-bold text-sm">📋 รายการสินทรัพย์</button>
+          <button onclick="showSection('employees'); toggleMobileNav(false)" class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10 font-bold text-sm">🏢 โครงสร้างองค์กร</button>
+          <button data-admin-only onclick="showSection('users'); toggleMobileNav(false)" class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10 font-bold text-sm">👥 ผู้ใช้งาน</button>
+        </div>
+        <div class="mt-6 pt-4 border-t border-white/10">
+          <button onclick="handleLogout()" class="w-full text-left px-4 py-3 rounded-lg hover:bg-red-500/10 font-bold text-sm text-red-300">🚪 ออกจากระบบ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto bg-slate-50">
+      <div class="p-4 sm:p-6 w-full max-w-none mx-0">
+
+        <!-- Dashboard -->
+        <section id="section-dashboard" class="fade-in space-y-6">
+          <h2 class="text-2xl font-bold text-slate-800">แดชบอร์ดภาพรวม</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+              <p class="text-slate-500 text-sm">สินทรัพย์ทั้งหมด</p>
+              <h3 id="stat-total-count" class="text-3xl font-bold text-slate-800">0</h3>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+              <p class="text-slate-500 text-sm">มูลค่ารวม (บาท)</p>
+              <h3 id="stat-total-value" class="text-3xl font-bold text-blue-600">0</h3>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+              <p class="text-slate-500 text-sm">พนักงานในระบบ</p>
+              <h3 id="stat-emp-count" class="text-3xl font-bold text-emerald-600">0</h3>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+              <h4 class="font-bold text-slate-700 mb-4">สถานะทางกายภาพ</h4>
+              <div class="chart-container"><canvas id="statusChart"></canvas></div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="font-bold text-slate-700">สัดส่วนตามประเภท</h4>
+                <span class="text-xs text-slate-400">รวม: <b id="cat-total">0</b></span>
+              </div>
+              <div id="category-count-list" class="space-y-3"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Assets -->
+        <section id="section-assets" class="fade-in hidden space-y-6">
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+              <div>
+                <h2 class="text-2xl font-bold text-slate-800">รายการสินทรัพย์</h2>
+              </div>
+
+              <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <button onclick="exportAssetsExcel()"
+                  class="bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-bold hover:bg-emerald-700 transition w-full sm:w-auto">
+                  ⬆️ Export Excel
+                </button>
+
+                <!-- พนักงาน (STAFF) สามารถกดปุ่มนี้เพื่อ Import ได้ -->
+                <button onclick="triggerImportAssets()"
+                  class="bg-white border px-4 py-2.5 rounded-lg font-bold hover:bg-slate-50 transition w-full sm:w-auto">
+                  ⬇️ Import Excel
+                </button>
+
+                <button onclick="showAssetModal()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 shadow-lg transition w-full sm:w-auto">
+                  + เพิ่มสินทรัพย์
+                </button>
+              </div>
+            </div>
+
+            <!-- Search Bar (ค้นหาด้วยเลขทะเบียน) -->
+            <div class="bg-white rounded-xl border shadow-sm p-3 flex flex-col sm:flex-row gap-2 sm:items-center">
+              <div class="flex-1">
+                <label class="text-xs font-bold text-slate-500 uppercase">ค้นหาเลขทะเบียน / ชื่อ</label>
+                <input id="asset-search-input" type="text"
+                  class="w-full mt-1 px-3 py-2 border rounded-lg outline-none text-sm focus:ring-2 focus:ring-blue-500"
+                  placeholder="พิมพ์เลขทะเบียน เช่น AS-0001 หรือชื่อ..."
+                  oninput="handleAssetSearch(this.value)">
+              </div>
+
+              <button onclick="clearAssetSearch()"
+                class="px-4 py-2.5 rounded-lg border font-bold text-sm hover:bg-slate-50 mt-5 sm:mt-0">
+                ล้างค้นหา
+              </button>
+            </div>
+          </div>
+
+          <div class="flex gap-2 overflow-x-auto pb-2 scroll-hide" id="category-filter-container"></div>
+
+          <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-sm min-w-[860px] lg:min-w-0">
+                <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                  <tr>
+                    <th class="px-6 py-4 font-bold">รูปภาพ</th>
+                    <th class="px-6 py-4 font-bold">ทะเบียน / ชื่อ / ประเภท</th>
+                    <th class="px-6 py-4 font-bold hidden lg:table-cell">สาขา / แผนก</th>
+                    <th class="px-6 py-4 font-bold hidden lg:table-cell">ผู้ถือครอง</th>
+                    <th class="px-6 py-4 font-bold text-center">สถานะ</th>
+                    <th class="px-6 py-4 font-bold text-right hidden lg:table-cell">ราคา (บาท)</th>
+                    <th class="px-6 py-4 font-bold text-center">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="asset-table-body" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+            <!-- Pagination Container for Assets -->
+            <div id="asset-pagination-container"></div>
+          </div>
+
+          <input id="asset-import-file" type="file" accept=".xlsx, .xls, .csv" class="hidden" onchange="importAssetsExcel(event)">
+        </section>
+
+        <!-- Organization -->
+        <section id="section-employees" class="fade-in hidden space-y-8">
+          <div class="space-y-4">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+              <h2 class="text-2xl font-bold text-slate-800">จัดการรายชื่อพนักงาน</h2>
+              <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <button onclick="exportEmployeesExcel()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-bold hover:bg-emerald-700 transition w-full sm:w-auto">
+                  ⬆️ Export Excel
+                </button>
+                <button onclick="triggerImportEmployees()" class="bg-white border px-4 py-2.5 rounded-lg font-bold hover:bg-slate-50 transition w-full sm:w-auto">
+                  ⬇️ Import Excel
+                </button>
+                <button onclick="showEmployeeModal()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 shadow-lg w-full sm:w-auto">
+                  + เพิ่มพนักงาน
+                </button>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+              <table class="w-full text-left text-sm min-w-[640px] md:min-w-0">
+                <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                  <tr>
+                    <th class="px-6 py-4 font-bold">พนักงาน</th>
+                    <th class="px-6 py-4 font-bold hidden md:table-cell">สาขา / แผนก</th>
+                    <th class="px-6 py-4 font-bold text-center">สินทรัพย์</th>
+                    <th class="px-6 py-4 font-bold text-center">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="employee-table-body" class="divide-y divide-slate-100"></tbody>
+              </table>
+              <!-- Pagination Container for Employees -->
+              <div id="employee-pagination-container"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 pt-6 border-t">
+            <div class="space-y-4">
+              <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-800">🏷️ ประเภทสินทรัพย์</h3>
+                <button onclick="showCategoryModal()" class="text-blue-600 font-bold text-sm">+ เพิ่ม</button>
+              </div>
+              <div class="bg-white rounded-xl shadow-sm border divide-y" id="category-list-container"></div>
+            </div>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-800">📍 จัดการสาขา</h3>
+                <button onclick="showBranchModal()" class="text-blue-600 font-bold text-sm">+ เพิ่ม</button>
+              </div>
+              <div class="bg-white rounded-xl shadow-sm border divide-y" id="branch-list-container"></div>
+            </div>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-800">💼 แผนก/ตำแหน่ง</h3>
+                <button onclick="showDeptModal()" class="text-blue-600 font-bold text-sm">+ เพิ่ม</button>
+              </div>
+              <div class="bg-white rounded-xl shadow-sm border divide-y" id="dept-list-container"></div>
+            </div>
+          </div>
+
+          <!-- Input สำหรับ Import พนักงาน -->
+          <input id="employee-import-file" type="file" accept=".xlsx, .xls, .csv" class="hidden" onchange="importEmployeesExcel(event)">
+        </section>
+
+        <!-- Users -->
+        <section id="section-users" class="fade-in hidden space-y-6">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <h2 class="text-2xl font-bold text-slate-800">จัดการผู้ใช้งาน</h2>
+            <button data-admin-only onclick="showUserModal()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-indigo-700 w-full sm:w-auto">+ เพิ่มผู้ใช้งาน</button>
+          </div>
+          <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <table class="w-full text-left text-sm min-w-[620px] md:min-w-0">
+              <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                <tr>
+                  <th class="px-6 py-4">Username</th>
+                  <th class="px-6 py-4">Role</th>
+                  <th class="px-6 py-4 text-center">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="user-table-body" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Google Sheets Setup Modal -->
+  <div id="gas-setup-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[2000]">
+    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+      <div class="p-6 bg-slate-900 text-white flex items-center justify-between">
+        <h3 class="text-lg font-bold flex items-center gap-2">☁️ ตั้งค่า Google Sheets Backend</h3>
+        <button onclick="hideGasSetup()" class="text-white/60 hover:text-white font-bold">✕</button>
+      </div>
+      <div class="p-6 space-y-4">
+        <p class="text-sm text-slate-600">นำ <b class="text-blue-600">Web App URL</b> ที่ได้จากการ Deploy Google Apps Script มาใส่ที่นี่ เพื่อเชื่อมต่อและใช้ Google Sheets เป็นฐานข้อมูล</p>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Web App URL</label>
+          <input type="text" id="gas-url-input" class="w-full px-3 py-2 border rounded-lg outline-none text-sm font-mono bg-slate-50 focus:bg-white" placeholder="https://script.google.com/macros/s/.../exec">
+        </div>
+        <div class="pt-4 flex flex-col sm:flex-row gap-3">
+          <button type="button" onclick="saveGasSetup('')" class="py-2.5 px-4 border border-red-200 text-red-600 rounded-lg font-bold text-sm bg-red-50 hover:bg-red-100 transition whitespace-nowrap">ยกเลิกเชื่อมต่อ</button>
+          <div class="flex-1"></div>
+          <button type="button" onclick="hideGasSetup()" class="py-2.5 px-6 border rounded-lg font-bold text-sm hover:bg-slate-50 transition">ปิด</button>
+          <button type="button" onclick="saveGasSetup(document.getElementById('gas-url-input').value)" class="py-2.5 px-6 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 transition shadow-lg">บันทึก & โหลดข้อมูล</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+  <div id="asset-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[200]">
+    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="p-6 bg-slate-900 text-white flex justify-between items-center shrink-0">
+        <h3 class="text-lg font-bold">ฟอร์มสินทรัพย์</h3>
+        <button onclick="hideAssetModal()" class="text-white/60">✕</button>
+      </div>
+      <form id="asset-form" class="p-6 space-y-4 overflow-y-auto" onsubmit="handleAssetSubmit(event)">
+        <input type="hidden" id="modal-asset-id">
+        <img id="modal-image-preview" src="" class="asset-img-large hidden" alt="Preview">
+        
+        <!-- ส่วนอัปโหลดรูปภาพที่ปรับปรุงใหม่ -->
+        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+          <label class="block text-xs font-bold text-blue-800 mb-2">📸 รูปภาพ</label>
+          <div class="flex gap-2">
+            <!-- ปุ่มเลือกไฟล์รูปภาพจากเครื่อง (ไม่มี capture) -->
+            <input type="file" id="modal-image-file" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+            <button type="button" onclick="document.getElementById('modal-image-file').click()" class="flex-1 py-2.5 bg-white border border-blue-300 rounded-lg text-sm text-blue-600 font-bold hover:bg-blue-100 transition shadow-sm flex items-center justify-center gap-2">
+              <span>📁</span> เลือกไฟล์
+            </button>
+
+            <!-- ปุ่มเปิดกล้องถ่ายรูป (มี capture="environment" เพื่อบังคับเปิดกล้องหลัง) -->
+            <input type="file" id="modal-image-camera" accept="image/*" capture="environment" class="hidden" onchange="handleImageUpload(event)">
+            <button type="button" onclick="document.getElementById('modal-image-camera').click()" class="flex-1 py-2.5 bg-white border border-blue-300 rounded-lg text-sm text-blue-600 font-bold hover:bg-blue-100 transition shadow-sm flex items-center justify-center gap-2">
+              <span>📷</span> ถ่ายรูป
+            </button>
+          </div>
+        </div>
+
+        <div><label class="block text-xs font-bold text-slate-500 mb-1">ทะเบียน</label><input type="text" id="modal-assetno" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+        <div><label class="block text-xs font-bold text-slate-500 mb-1">แท็ก (คั่นด้วย ,)</label><input type="text" id="modal-tags" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+        
+        <!-- ซ่อนช่องกรอก URL รูปภาพตามที่ต้องการ -->
+        <div class="hidden"><label class="block text-xs font-bold text-slate-500 mb-1">หรือ ระบุลิงก์ URL รูปภาพ</label><input type="text" id="modal-image-url" class="w-full px-3 py-2 border rounded-lg text-sm" oninput="updatePreview(this.value)" placeholder="https://..."></div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div class="col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">ชื่อ</label><input type="text" id="modal-name" required class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+          <div><label class="block text-xs font-bold text-slate-500 mb-1">ประเภท</label><select id="modal-category" required class="w-full px-3 py-2 border rounded-lg text-sm"></select></div>
+          <div><label class="block text-xs font-bold text-slate-500 mb-1">วันที่ซื้อ</label><input type="date" id="modal-purchase-date" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+          <div><label class="block text-xs font-bold text-slate-500 mb-1">ราคา</label><input type="number" id="modal-price" required class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+          <div><label class="block text-xs font-bold text-slate-500 mb-1">ผู้ถือครอง</label><select id="modal-employee" class="w-full px-3 py-2 border rounded-lg text-sm"></select></div>
+          <div class="col-span-2">
+            <label class="block text-xs font-bold text-slate-500 mb-1">สถานะ</label>
+            <select id="modal-status" class="w-full px-3 py-2 border rounded-lg text-sm">
+              <option value="Active">ปกติ</option>
+              <option value="Available">ว่าง</option>
+              <option value="Broken">ชำรุด</option>
+              <option value="Maintenance">ซ่อม</option>
+            </select>
+          </div>
+        </div>
+        <div><label class="block text-xs font-bold text-slate-500 mb-1">สเปก (Key: Value)</label><textarea id="modal-spec" rows="4" class="w-full px-3 py-2 border rounded-lg font-mono text-sm"></textarea></div>
+        <div class="pt-4 flex gap-3"><button type="button" onclick="hideAssetModal()" class="flex-1 py-2 border rounded-lg font-bold">ยกเลิก</button><button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold">บันทึก</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="asset-detail-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-[300]">
+    <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="p-6 bg-slate-900 text-white flex justify-between items-center sticky top-0"><h3 class="text-lg font-bold">รายละเอียด</h3><button onclick="hideAssetDetail()" class="text-white/60">✕</button></div>
+      <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto">
+        <img id="detail-image" class="w-full h-56 object-cover rounded-xl border">
+        <div class="space-y-3">
+          <div id="detail-assetno" class="text-lg font-extrabold text-slate-800"></div>
+          <div id="detail-name" class="text-xl font-extrabold text-slate-800"></div>
+          <div class="flex gap-2"><span id="detail-category" class="px-2 py-1 rounded bg-slate-100 text-xs font-bold"></span><span id="detail-status" class="px-2 py-1 rounded text-xs font-bold"></span></div>
+          <div id="detail-tags" class="flex flex-wrap gap-2"></div>
+          <div id="detail-employee" class="font-bold text-blue-600"></div>
+          <div id="detail-purchase-date" class="text-sm text-slate-600"></div>
+          <div id="detail-price" class="font-bold text-slate-800"></div>
+          <div id="detail-spec" class="text-sm bg-slate-50 p-3 rounded-lg border mt-2"></div>
+        </div>
+        <div class="md:col-span-2 border-t pt-4">
+          <div class="flex justify-between mb-4">
+            <span class="font-bold">ประวัติ</span>
+            <div><button onclick="addHistoryLog(currentDetailAssetId)" class="border px-2 py-1 text-xs rounded mr-2 hover:bg-slate-50">➕ ประวัติ</button><button onclick="addMaintenanceLog()" class="border px-2 py-1 text-xs rounded hover:bg-slate-50">🛠️ ซ่อม</button></div>
+          </div>
+          <div id="detail-history" class="tl"></div>
+        </div>
+        <div class="md:col-span-2 flex gap-2"><button onclick="hideAssetDetail()" class="flex-1 py-2 border rounded-lg font-bold text-sm">ปิด</button><button onclick="detailEdit()" class="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm">แก้ไข</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Other Modals -->
+  <div id="employee-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[200]"><div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"><div class="p-6 bg-emerald-900 text-white flex justify-between items-center"><h3 class="font-bold">พนักงาน</h3><button onclick="hideEmployeeModal()" class="text-white/60">✕</button></div><form id="employee-form" class="p-6 space-y-4" onsubmit="handleEmployeeSubmit(event)"><input type="hidden" id="modal-emp-id"><div><label class="block text-xs font-bold text-slate-500 mb-1">ชื่อ</label><input type="text" id="emp-modal-name" required class="w-full px-3 py-2 border rounded-lg text-sm"></div><div><label class="block text-xs font-bold text-slate-500 mb-1">ตำแหน่ง</label><input type="text" id="emp-modal-pos" required class="w-full px-3 py-2 border rounded-lg text-sm"></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-bold text-slate-500 mb-1">สาขา</label><select id="emp-modal-branch" class="w-full px-3 py-2 border rounded-lg text-sm"></select></div><div><label class="block text-xs font-bold text-slate-500 mb-1">แผนก</label><select id="emp-modal-dept" class="w-full px-3 py-2 border rounded-lg text-sm"></select></div></div><div class="flex gap-3"><button type="button" onclick="hideEmployeeModal()" class="flex-1 py-2 border rounded-lg">ยกเลิก</button><button type="submit" class="flex-1 py-2 bg-emerald-600 text-white rounded-lg">บันทึก</button></div></form></div></div>
+  <div id="category-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[210]"><div class="bg-white rounded-xl w-full max-w-sm"><div class="p-4 border-b font-bold text-slate-700">ประเภท</div><form id="category-form" class="p-4 space-y-4" onsubmit="handleCategorySubmit(event)"><input type="hidden" id="modal-category-id"><input type="text" id="category-modal-name" required class="w-full px-3 py-2 border rounded-lg text-sm"><div class="flex gap-2"><button type="button" onclick="hideCategoryModal()" class="flex-1 py-2 border rounded-lg text-sm">ยกเลิก</button><button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm">บันทึก</button></div></form></div></div>
+  <div id="branch-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[210]"><div class="bg-white rounded-xl w-full max-w-sm"><div class="p-4 border-b font-bold text-slate-700">สาขา</div><form id="branch-form" class="p-4 space-y-4" onsubmit="handleBranchSubmit(event)"><input type="hidden" id="modal-branch-id"><input type="text" id="branch-modal-name" required class="w-full px-3 py-2 border rounded-lg mb-2 text-sm"><input type="text" id="branch-modal-loc" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="สถานที่"><div class="flex gap-2 mt-2"><button type="button" onclick="hideBranchModal()" class="flex-1 py-2 border rounded-lg text-sm">ยกเลิก</button><button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm">บันทึก</button></div></form></div></div>
+  <div id="dept-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[210]"><div class="bg-white rounded-xl w-full max-w-sm"><div class="p-4 border-b font-bold text-slate-700">แผนก</div><form id="dept-form" class="p-4 space-y-4" onsubmit="handleDeptSubmit(event)"><input type="hidden" id="modal-dept-id"><input type="text" id="dept-modal-name" required class="w-full px-3 py-2 border rounded-lg text-sm"><div class="flex gap-2"><button type="button" onclick="hideDeptModal()" class="flex-1 py-2 border rounded-lg text-sm">ยกเลิก</button><button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm">บันทึก</button></div></form></div></div>
+  <div id="user-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[220]"><div class="bg-white rounded-2xl w-full max-w-md"><div class="p-6 bg-indigo-900 text-white flex justify-between items-center"><h3 class="font-bold">ผู้ใช้งาน</h3><button onclick="hideUserModal()" class="text-white/60">✕</button></div><form id="user-form" class="p-6 space-y-4" onsubmit="handleUserSubmit(event)"><input type="hidden" id="modal-user-username-old"><div><label class="block text-xs font-bold text-slate-500 mb-1">Username</label><input type="text" id="user-modal-username" required class="w-full px-3 py-2 border rounded-lg text-sm"></div><div><label class="block text-xs font-bold text-slate-500 mb-1">Password</label><input type="password" id="user-modal-password" required class="w-full px-3 py-2 border rounded-lg text-sm"></div><div><label class="block text-xs font-bold text-slate-500 mb-1">Role</label><select id="user-modal-role" class="w-full px-3 py-2 border rounded-lg text-sm"><option value="STAFF">STAFF</option><option value="ADMIN">ADMIN</option></select></div><div class="flex gap-3"><button type="button" onclick="hideUserModal()" class="flex-1 py-2 border rounded-lg text-sm font-bold">ยกเลิก</button><button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold">บันทึก</button></div></form></div></div>
+
+  <script>
+    // ==========================================
+    // 🎨 MODERN DIALOG & TOAST SYSTEM
+    // ==========================================
+    const Dialog = {
+      show: (options) => {
+        return new Promise((resolve) => {
+          const dialog = document.getElementById('custom-dialog');
+          const panel = document.getElementById('custom-dialog-panel');
+          const titleEl = document.getElementById('custom-dialog-title');
+          const messageEl = document.getElementById('custom-dialog-message');
+          const iconEl = document.getElementById('custom-dialog-icon');
+          const btnContainer = document.getElementById('custom-dialog-buttons');
+
+          titleEl.innerText = options.title || 'แจ้งเตือน';
+          
+          if (options.type === 'prompt') {
+             messageEl.innerHTML = `<p class="mb-3">${options.message}</p><input type="text" id="custom-dialog-input" class="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm text-center" value="${options.defaultValue || ''}">`;
+          } else {
+             messageEl.innerHTML = options.message || '';
+          }
+          
+          let icon = 'ℹ️';
+          if(options.type === 'error') icon = '❌';
+          if(options.type === 'success') icon = '✅';
+          if(options.type === 'warning' || options.type === 'confirm') icon = '⚠️';
+          if(options.type === 'prompt') icon = '📝';
+          iconEl.innerText = icon;
+
+          btnContainer.innerHTML = '';
+
+          const closeDialog = (result) => {
+            dialog.classList.remove('opacity-100');
+            panel.classList.remove('scale-100');
+            setTimeout(() => {
+              dialog.classList.add('hidden');
+              dialog.classList.remove('flex');
+              resolve(result);
+            }, 200);
+          };
+
+          if (options.type === 'confirm' || options.type === 'prompt') {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'px-5 py-2.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition flex-1';
+            cancelBtn.innerText = options.cancelText || 'ยกเลิก';
+            cancelBtn.onclick = () => closeDialog(options.type === 'prompt' ? null : false);
+
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = `px-5 py-2.5 rounded-xl font-bold text-white transition flex-1 shadow-lg ${options.confirmColor || 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'}`;
+            if(options.type === 'confirm' && !options.confirmColor) confirmBtn.className = 'px-5 py-2.5 rounded-xl font-bold text-white transition flex-1 shadow-lg bg-red-500 hover:bg-red-600 shadow-red-200';
+            
+            confirmBtn.innerText = options.confirmText || 'ตกลง';
+            confirmBtn.onclick = () => {
+               if(options.type === 'prompt') {
+                 closeDialog(document.getElementById('custom-dialog-input').value);
+               } else {
+                 closeDialog(true);
+               }
+            };
+
+            btnContainer.appendChild(cancelBtn);
+            btnContainer.appendChild(confirmBtn);
+          } else {
+            const okBtn = document.createElement('button');
+            okBtn.className = 'px-6 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-lg shadow-blue-200';
+            okBtn.innerText = 'ตกลง';
+            okBtn.onclick = () => closeDialog(true);
+            btnContainer.appendChild(okBtn);
+          }
+
+          dialog.classList.remove('hidden');
+          dialog.classList.add('flex');
+          // trigger reflow
+          void dialog.offsetWidth;
+          dialog.classList.add('opacity-100');
+          panel.classList.add('scale-100');
+          
+          if(options.type === 'prompt') {
+             setTimeout(() => {
+                const inp = document.getElementById('custom-dialog-input');
+                if(inp) { inp.focus(); inp.select(); }
+             }, 100);
+          }
+        });
+      },
+      alert: (message, title="แจ้งเตือน", type="info") => Dialog.show({ message, title, type }),
+      confirm: (message, title="ยืนยัน", confirmText="ยืนยัน", confirmColor="") => Dialog.show({ message, title, type: 'confirm', confirmText, confirmColor }),
+      prompt: (message, defaultValue="", title="กรอกข้อมูล") => Dialog.show({ message, title, type: 'prompt', defaultValue })
+    };
+
+    const Toast = {
+      show: (message, type = 'success') => {
+        const container = document.getElementById('custom-toast-container');
+        const toast = document.createElement('div');
+        
+        let bgColor = 'bg-slate-800';
+        let icon = '✅';
+        if(type === 'error') { bgColor = 'bg-red-600'; icon = '❌'; }
+        if(type === 'warning') { bgColor = 'bg-amber-500'; icon = '⚠️'; }
+        if(type === 'info') { bgColor = 'bg-blue-600'; icon = 'ℹ️'; }
+
+        toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform transition-all duration-300 translate-x-full opacity-0 pointer-events-auto`;
+        toast.innerHTML = `<span>${icon}</span><span class="text-sm font-bold">${message}</span>`;
+        
+        container.appendChild(toast);
+        
+        requestAnimationFrame(() => {
+          toast.classList.remove('translate-x-full', 'opacity-0');
+        });
+
+        setTimeout(() => {
+          toast.classList.add('translate-x-full', 'opacity-0');
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+    };
+
+    // ==========================================
+    // ⚙️ GOOGLE SHEETS INTEGRATION & INITIAL STORE
+    // ==========================================
+    let GAS_URL = localStorage.getItem('ASSET_PRO_GAS_URL') || 'https://script.google.com/macros/s/AKfycbzuUj31QctoheW3SBc14y0KhQG39M04sKBmqYroqtzaBubmEAKboK4yBpypIjtmxhuh/exec';
+
+    let store = {
+      currentUser: null,
+      selectedCategoryFilter: 'all',
+      assetSearchQuery: '',
+      users: [{ username: 'admin', password: '1234', role: 'ADMIN' }, { username: 'staff', password: '1234', role: 'STAFF' }],
+      categories: [{ id: 1, name: 'คอมพิวเตอร์' }],
+      branches: [{ id: 1, name: 'สนง.ใหญ่', location: 'กทม' }],
+      departments: [{ id: 1, name: 'IT' }],
+      employees: [{ id: 1, name: 'สมชาย รักงาน', branchId: 1, deptId: 1, position: 'IT' }],
+      assets: [{ id: 1, assetNo: 'AS-0001', name: 'Sample Laptop', tags: ['laptop'], categoryId: 1, employeeId: 1, price: 30000, purchaseDate: '2023-05-15', status: 'Active', imageUrl: '', spec: { cpu: 'Intel' }, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), updatedBy: 'SYSTEM', history: [] }]
+    };
+
+    // Helper functions สำหรับแปลงและแสดงผลสถานะ
+    function getStatusDisplay(status) {
+      const map = { 'Active': 'ปกติ', 'Available': 'ว่าง', 'Broken': 'ชำรุด', 'Maintenance': 'ซ่อม' };
+      return map[status] || status;
+    }
+
+    function getStatusColor(status) {
+      const s = getStatusDisplay(status);
+      if (s === 'ปกติ') return 'bg-emerald-100 text-emerald-700';
+      if (s === 'ชำรุด') return 'bg-red-100 text-red-700';
+      if (s === 'ซ่อม') return 'bg-amber-100 text-amber-700';
+      if (s === 'ว่าง') return 'bg-blue-100 text-blue-700';
+      return 'bg-slate-100 text-slate-700';
+    }
+
+    window.onload = async () => {
+      if (GAS_URL) await loadDataFromGAS();
+      else updateBackendBadge();
+      checkAuth();
+    };
+
+    async function loadDataFromGAS() {
+      document.getElementById('full-page-loader').classList.remove('hidden');
+      try {
+        const res = await fetch(GAS_URL + "?action=load");
+        if (!res.ok) throw new Error("Network response was not ok");
+        const data = await res.json();
+        
+        if (data && data.assets) {
+          // ✅ ดึงวันที่ซื้อที่ถูกซ่อนไว้ใน spec กลับมาอัตโนมัติ (เผื่อ Google Sheets ไม่รู้จักคอลัมน์วันที่ซื้อ)
+          data.assets.forEach(a => {
+            if (!a.purchaseDate && a.spec && a.spec.__purchaseDate) {
+              a.purchaseDate = a.spec.__purchaseDate;
+            }
+          });
+
+          const currentUser = store.currentUser;
+          const filter = store.selectedCategoryFilter;
+          const q = store.assetSearchQuery;
+          store = { ...data, currentUser, selectedCategoryFilter: filter, assetSearchQuery: q };
+
+          if (!store.users || store.users.length === 0) {
+            store.users = [
+              { username: 'admin', password: '1234', role: 'ADMIN' },
+              { username: 'staff', password: '1234', role: 'STAFF' }
+            ];
+            saveStoreToGAS();
+          }
+        }
+      } catch(e) {
+        console.error("GAS Load Error:", e);
+        Dialog.alert("ไม่สามารถโหลดข้อมูลจาก Google Sheets ได้<br>ระบบจะใช้ข้อมูลตัวอย่าง (Local Data) แทน", "ข้อผิดพลาด", "error");
+        GAS_URL = '';
+        localStorage.removeItem('ASSET_PRO_GAS_URL');
+      } finally {
+        document.getElementById('full-page-loader').classList.add('hidden');
+        updateBackendBadge();
+      }
+    }
+
+    async function saveStoreToGAS() {
+      if (!GAS_URL) return;
+
+      const toast = document.getElementById('sync-toast');
+      toast.classList.remove('translate-y-full', 'opacity-0');
+
+      try {
+        const payloadStore = {
+          users: store.users, categories: store.categories, branches: store.branches,
+          departments: store.departments, employees: store.employees, assets: store.assets
+        };
+
+        await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'save', store: payloadStore })
+        });
+      } catch(e) {
+        console.error("GAS Save Error:", e);
+        Toast.show("การซิงค์ล้มเหลว บันทึกแค่ในเบราว์เซอร์", "warning");
+      } finally {
+        setTimeout(() => toast.classList.add('translate-y-full', 'opacity-0'), 1000);
+      }
+    }
+
+    function showGasSetup() {
+      document.getElementById('gas-url-input').value = GAS_URL;
+      document.getElementById('gas-setup-modal').classList.remove('hidden');
+      document.getElementById('gas-setup-modal').classList.add('flex');
+    }
+    function hideGasSetup() {
+      document.getElementById('gas-setup-modal').classList.add('hidden');
+      document.getElementById('gas-setup-modal').classList.remove('flex');
+    }
+    function saveGasSetup(url) {
+      if (url && url.trim().length > 0) localStorage.setItem('ASSET_PRO_GAS_URL', url.trim());
+      else localStorage.removeItem('ASSET_PRO_GAS_URL');
+      location.reload();
+    }
+    function updateBackendBadge() {
+      const badges = document.querySelectorAll('.backend-badge');
+      badges.forEach(b => {
+        if (GAS_URL) {
+          b.innerHTML = '☁️ Sheets Connected';
+          b.className = b.className.replace(/bg-slate-[0-9]+|text-slate-[0-9]+|bg-slate-100/g, '');
+          b.classList.add('bg-green-100', 'text-green-700');
+        } else {
+          b.innerHTML = '💻 Local Data';
+          b.className = b.className.replace(/bg-green-[0-9]+|text-green-[0-9]+/g, '');
+          b.classList.add('bg-slate-100', 'text-slate-600');
+        }
+      });
+    }
+
+    function toggleMobileNav(open) { document.getElementById('mobile-nav').classList.toggle('hidden', !open); }
+    function normalizeTags(str) { return !str ? [] : str.split(',').map(s => s.trim().toLowerCase()).filter(Boolean); }
+    function tagsToString(tagsArr) { return Array.isArray(tagsArr) ? tagsArr.join(', ') : ''; }
+    function genAssetNo(nextNum) { return `AS-${String(nextNum).padStart(4, '0')}`; }
+    function getNextAssetNo() {
+      let max = 0;
+      store.assets.forEach(a => { if (a.assetNo && /^AS-\d{4,}$/.test(a.assetNo)) max = Math.max(max, parseInt(a.assetNo.split('-')[1], 10) || 0); });
+      return genAssetNo(max + 1);
+    }
+    function isAssetNoDuplicate(assetNo, ignoreId = null) {
+      const key = (assetNo || '').trim().toUpperCase();
+      return key && store.assets.some(a => (a.assetNo || '').trim().toUpperCase() === key && a.id !== ignoreId);
+    }
+
+    function parseSpecInput(text) {
+      const t = (text || "").trim(); if (!t) return null;
+      const obj = {};
+      t.split(/\r?\n/).forEach(line => {
+        const raw = line.trim(); if (!raw) return;
+        const m = raw.match(/^(.+?)(:|=)(.+)$/);
+        if (!m) throw new Error(`รูปแบบไม่ถูกต้อง: "${line}"\nตัวอย่าง: ram: 16GB`);
+        obj[m[1].trim()] = m[3].trim();
+      });
+      return Object.keys(obj).length ? obj : null;
+    }
+    
+    // ซ่อนคีย์ __purchaseDate ออกจากหน้าจอ Spec ไม่ให้ผู้ใช้เห็น
+    function specToText(spec) {
+      if (!spec || typeof spec !== "object") return "";
+      return Object.entries(spec)
+        .filter(([k, v]) => v !== null && v !== undefined && String(v).trim() !== "" && k !== "__purchaseDate")
+        .map(([k, v]) => `${k}: ${v}`).join("\n");
+    }
+
+    function nowISO() { return new Date().toISOString(); }
+    function formatDateTime(iso) { return !iso || isNaN(new Date(iso)) ? '—' : new Date(iso).toLocaleString('th-TH', { year:'numeric', month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' }); }
+    function currentUserName() { return store.currentUser?.name || 'SYSTEM'; }
+    
+    function ensureAssetAudit(a) {
+      a.createdAt = a.createdAt || nowISO();
+      a.updatedAt = a.updatedAt || a.createdAt;
+      a.updatedBy = a.updatedBy || 'SYSTEM';
+      a.history = a.history || [];
+      if (!a.history.length) a.history.push({ ts: a.createdAt, type:'CREATE', by: a.updatedBy, note:'สร้างรายการ' });
+      
+      // ฟื้นฟูวันที่ในกรณีฉุกเฉิน
+      if (!a.purchaseDate && a.spec && a.spec.__purchaseDate) {
+        a.purchaseDate = a.spec.__purchaseDate;
+      }
+    }
+    
+    function logAssetEvent(assetId, evt) {
+      const a = store.assets.find(x => x.id === assetId); if (!a) return; ensureAssetAudit(a);
+      const event = { ts: evt.ts || nowISO(), type: evt.type || 'UPDATE', by: evt.by || currentUserName(), from: evt.from ?? null, to: evt.to ?? null, note: evt.note || '' };
+      a.history.unshift(event); a.updatedAt = event.ts; a.updatedBy = event.by;
+    }
+
+    function isAdmin() { return store.currentUser?.role === 'ADMIN'; }
+    function requireAdmin(actionName) { if (!isAdmin()) { Dialog.alert(`เฉพาะ ADMIN เท่านั้นที่สามารถ${actionName}ได้`, "ไม่มีสิทธิ์", "error"); return false; } return true; }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('login-username').value.toLowerCase().trim();
+      const p = document.getElementById('login-password').value;
+
+      const found = store.users.find(x => String(x.username).toLowerCase() === u && String(x.password) === p);
+      
+      // Animation Effect
+      const btnText = document.getElementById('login-btn-text');
+      const spinner = document.getElementById('login-spinner');
+      btnText.classList.add('hidden');
+      spinner.classList.remove('hidden');
+
+      // Simulate loading delay for premium feel
+      await new Promise(r => setTimeout(r, 800));
+
+      btnText.classList.remove('hidden');
+      spinner.classList.add('hidden');
+
+      if (found) {
+        store.currentUser = { name: String(found.username).toUpperCase(), role: found.role, username: found.username };
+        checkAuth();
+        Toast.show(`ยินดีต้อนรับ ${store.currentUser.name}`);
+      } else {
+        Dialog.alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', "เข้าสู่ระบบล้มเหลว", "error");
+      }
+    }
+    function handleLogout() { store.currentUser = null; checkAuth(); }
+
+    function checkAuth() {
+      const lp = document.getElementById('login-page'), app = document.getElementById('app-layout');
+      if (!store.currentUser) { lp.classList.remove('hidden'); app.classList.add('hidden'); toggleMobileNav(false); }
+      else { lp.classList.add('hidden'); app.classList.remove('hidden'); setupUI(); }
+    }
+
+    function setupUI() {
+      document.getElementById('user-role-display').innerText = store.currentUser.role;
+      const mr = document.getElementById('mobile-role-display'); if (mr) mr.innerText = store.currentUser.role;
+      document.querySelectorAll('[data-admin-only]').forEach(el => el.classList.toggle('hidden', !isAdmin()));
+
+      const searchInput = document.getElementById('asset-search-input');
+      if (searchInput) searchInput.value = store.assetSearchQuery || '';
+
+      refreshDropdowns();
+      renderAssetTable();
+      renderEmployeeTable();
+      renderBranchList();
+      renderDeptList();
+      renderCategoryList();
+      renderCategoryFilter();
+
+      if (isAdmin()) renderUserTable();
+      else { const tb = document.getElementById('user-table-body'); if(tb) tb.innerHTML = ''; }
+
+      updateDashboardStats();
+      initCharts();
+
+      if (!isAdmin() && !document.getElementById('section-users').classList.contains('hidden')) showSection('dashboard');
+    }
+
+    function showSection(id) {
+      if (id === "users" && !isAdmin()) return Dialog.alert("เฉพาะ ADMIN เท่านั้นที่จะเข้าดูหน้านี้ได้", "ไม่มีสิทธิ์", "error");
+      document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(`section-${id}`).classList.remove('hidden');
+      document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+      const nav = document.getElementById(`nav-${id}`); if (nav) nav.classList.add('active');
+      toggleMobileNav(false);
+    }
+
+    function refreshDropdowns() {
+      document.getElementById('modal-employee').innerHTML = '<option value="">— ไม่ระบุ —</option>' + store.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+      document.getElementById('emp-modal-branch').innerHTML = store.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+      document.getElementById('emp-modal-dept').innerHTML = store.departments.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+      document.getElementById('modal-category').innerHTML = store.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    }
+
+    function renderCategoryFilter() {
+      const cont = document.getElementById('category-filter-container');
+      cont.innerHTML = [{ id: 'all', name: 'ทั้งหมด' }, ...store.categories].map(c =>
+        `<div onclick="filterByCategory('${c.id}')" class="category-chip px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap ${store.selectedCategoryFilter == c.id ? 'active' : 'bg-white text-slate-600'}">${c.name}</div>`
+      ).join('');
+    }
+    function filterByCategory(id) { 
+      store.selectedCategoryFilter = id; 
+      currentAssetPage = 1; // Reset page on filter
+      renderCategoryFilter(); 
+      renderAssetTable(); 
+    }
+
+    // ==========================================
+    // 🔍 ฟังก์ชันสำหรับการค้นหาสินทรัพย์
+    // ==========================================
+    function handleAssetSearch(val) {
+      store.assetSearchQuery = val;
+      currentAssetPage = 1; // Reset page on search
+      renderAssetTable();
+    }
+
+    function clearAssetSearch() {
+      const el = document.getElementById('asset-search-input');
+      if (el) el.value = '';
+      store.assetSearchQuery = '';
+      currentAssetPage = 1; // Reset page on clear
+      renderAssetTable();
+    }
+
+    // =======================
+    // ⬇️ Export to Excel (.xlsx) ด้วย SheetJS
+    // =======================
+    function exportAssetsExcel() {
+      if (!store.assets || store.assets.length === 0) {
+        Dialog.alert("ไม่มีข้อมูลสำหรับ Export", "แจ้งเตือน", "warning");
+        return;
+      }
+
+      // เตรียมข้อมูลให้เป็น Array ของ Object เพื่อแปลงเป็นตาราง Excel
+      const exportData = store.assets.map(a => {
+        const cat = store.categories.find(c => c.id == a.categoryId)?.name || '';
+        const emp = store.employees.find(e => e.id == a.employeeId);
+        const empName = emp?.name || '';
+        const branch = store.branches.find(b => b.id == emp?.branchId)?.name || '';
+        const dept = store.departments.find(d => d.id == emp?.deptId)?.name || '';
+        const specStr = specToText(a.spec).replace(/\n/g, " | ");
+
+        return {
+          "ทะเบียน": a.assetNo || '',
+          "ชื่อสินทรัพย์": a.name || '',
+          "ประเภท": cat,
+          "ผู้ถือครอง": empName,
+          "สาขา": branch,
+          "แผนก": dept,
+          "สถานะ": getStatusDisplay(a.status),
+          "ราคา": a.price || 0,
+          "วันที่ซื้อ": a.purchaseDate || '',
+          "รายละเอียดสเปก": specStr,
+          "URL รูปภาพ": a.imageUrl || '' // เพิ่มคอลัมน์ URL รูปภาพ
+        };
+      });
+
+      // สร้าง Worksheet จากข้อมูล
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      
+      // ปรับความกว้างคอลัมน์อัตโนมัติ (คร่าวๆ)
+      const wscols = [
+        {wch: 15}, {wch: 30}, {wch: 15}, {wch: 20}, {wch: 15}, 
+        {wch: 15}, {wch: 10}, {wch: 12}, {wch: 15}, {wch: 50},
+        {wch: 50} // ความกว้างสำหรับคอลัมน์ URL รูปภาพ
+      ];
+      worksheet['!cols'] = wscols;
+
+      // สร้าง Workbook
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Assets Data");
+
+      // ดาวน์โหลดไฟล์ .xlsx
+      XLSX.writeFile(workbook, `assets-export-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    }
+
+    function triggerImportAssets() {
+      const el = document.getElementById("asset-import-file");
+      if (el) el.click();
+    }
+
+    // =======================
+    // ⬆️ Import from Excel (.xlsx) ด้วย SheetJS
+    // =======================
+    function importAssetsExcel(event) {
+      const file = event?.target?.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          // อ่านไฟล์แบบ ArrayBuffer สำหรับไลบรารี xlsx
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          
+          // ดึง Sheet แรกมาใช้
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          
+          // แปลงข้อมูล Sheet เป็น JSON Array
+          const rawData = XLSX.utils.sheet_to_json(worksheet);
+
+          if (!rawData || rawData.length === 0) {
+            Dialog.alert("ไม่พบข้อมูลในไฟล์ Excel หรือไฟล์ว่างเปล่า", "Import ล้มเหลว", "warning");
+            return;
+          }
+
+          let addedCount = 0;
+          let updatedCount = 0;
+
+          // กลับสถานะภาษาไทยให้เป็นตัวแปรระบบตอน Import
+          const reverseStatusMap = {
+            'ปกติ': 'Active',
+            'ว่าง': 'Available',
+            'ชำรุด': 'Broken',
+            'ซ่อม': 'Maintenance'
+          };
+
+          // วนลูปอ่านข้อมูลทีละบรรทัด
+          rawData.forEach(row => {
+            const rowAssetNo = (row["ทะเบียน"] || "").toString().trim().toUpperCase();
+            if (!rowAssetNo && !row["ชื่อสินทรัพย์"]) return; // ข้ามบรรทัดที่ว่างจริงๆ
+
+            // ค้นหา Category ID จากชื่อ
+            let catId = store.categories?.[0]?.id ?? 1;
+            if (row["ประเภท"]) {
+              const foundCat = store.categories.find(c => c.name.trim() === row["ประเภท"].trim());
+              if (foundCat) catId = foundCat.id;
+            }
+
+            // ค้นหา Employee ID จากชื่อ
+            let empId = null;
+            if (row["ผู้ถือครอง"]) {
+              const foundEmp = store.employees.find(emp => emp.name.trim() === row["ผู้ถือครอง"].trim());
+              if (foundEmp) empId = foundEmp.id;
+            }
+
+            // แปลง Text Spec กลับเป็น Object (หากมีข้อมูล)
+            let specObj = null;
+            if (row["รายละเอียดสเปก"]) {
+              const parts = row["รายละเอียดสเปก"].split('|').map(s => s.trim()).filter(Boolean);
+              if (parts.length > 0) {
+                specObj = {};
+                parts.forEach(p => {
+                  const [k, v] = p.split(':').map(s => s.trim());
+                  if (k && v) specObj[k] = v;
+                });
+              }
+            }
+
+            const rawStatus = (row["สถานะ"] || "Active").trim();
+            const mappedStatus = reverseStatusMap[rawStatus] || rawStatus;
+
+            // ตรวจสอบว่ามี "เลขทะเบียน" นี้ในระบบแล้วหรือไม่
+            const existingAssetIndex = store.assets.findIndex(a => a.assetNo.toUpperCase() === rowAssetNo);
+
+            if (existingAssetIndex >= 0 && rowAssetNo !== "") {
+               // ---------- กรณีมีอยู่แล้ว: ให้อัปเดตข้อมูล ----------
+               const existing = store.assets[existingAssetIndex];
+               existing.name = row["ชื่อสินทรัพย์"] || existing.name;
+               existing.categoryId = catId;
+               existing.employeeId = empId;
+               existing.status = mappedStatus;
+               existing.price = Number(row["ราคา"] || existing.price);
+               
+               if (row["วันที่ซื้อ"] !== undefined) {
+                 existing.purchaseDate = row["วันที่ซื้อ"]; 
+               }
+
+               if (row["URL รูปภาพ"] !== undefined) {
+                 existing.imageUrl = row["URL รูปภาพ"]; 
+               }
+               
+               if (specObj) existing.spec = specObj;
+               
+               // ✅ แบ็คอัพวันที่เก็บลง Spec ป้องกันข้อมูลหายเวลา Sync กับ Sheets
+               if (!existing.spec) existing.spec = {};
+               existing.spec.__purchaseDate = existing.purchaseDate || '';
+               
+               existing.updatedAt = nowISO();
+               existing.updatedBy = currentUserName();
+               
+               // บันทึกประวัติการแก้ไข
+               if (!existing.history) existing.history = [];
+               existing.history.unshift({ ts: existing.updatedAt, type: 'UPDATE', by: existing.updatedBy, note: 'อัปเดตข้อมูลจากการ Import Excel' });
+               
+               updatedCount++;
+            } else {
+               // ---------- กรณีไม่มี: ให้เพิ่มข้อมูลใหม่ ----------
+               const newAsset = {
+                 id: Date.now() + Math.floor(Math.random() * 100000), // สุ่ม ID
+                 assetNo: rowAssetNo || getNextAssetNo(), // ถ้าไม่มีทะเบียนสร้างให้ใหม่
+                 name: row["ชื่อสินทรัพย์"] || "Unnamed Asset",
+                 categoryId: catId,
+                 employeeId: empId,
+                 status: mappedStatus,
+                 price: Number(row["ราคา"] || 0),
+                 purchaseDate: row["วันที่ซื้อ"] || "",
+                 spec: specObj || {},
+                 tags: [], 
+                 imageUrl: row["URL รูปภาพ"] || "", // ดึงค่า URL รูปภาพจากการ Import
+                 createdAt: nowISO(),
+                 updatedAt: nowISO(),
+                 updatedBy: currentUserName(),
+                 history: []
+               };
+               
+               // ✅ แบ็คอัพวันที่เก็บลง Spec ป้องกันข้อมูลหาย
+               newAsset.spec.__purchaseDate = newAsset.purchaseDate;
+               
+               ensureAssetAudit(newAsset);
+               store.assets.push(newAsset);
+               addedCount++;
+            }
+          });
+
+          // อัปเดต UI และบันทึกลง Database
+          setupUI();
+          saveStoreToGAS();
+          
+          Dialog.alert(`<b>Import ไฟล์ Excel สำเร็จ!</b><br>- เพิ่มรายการใหม่: ${addedCount} รายการ<br>- อัปเดตข้อมูลเดิม: ${updatedCount} รายการ`, "สำเร็จ", "success");
+
+        } catch (err) {
+          console.error(err);
+          Dialog.alert("ไม่สามารถอ่านไฟล์ Excel ได้ กรุณาตรวจสอบให้แน่ใจว่าเป็นไฟล์ .xlsx", "Import ล้มเหลว", "error");
+        } finally {
+          event.target.value = ""; // รีเซ็ต input file
+        }
+      };
+      
+      // สั่งให้อ่านไฟล์เป็น ArrayBuffer
+      reader.readAsArrayBuffer(file);
+    }
+
+    // ==========================================
+    // 📸 ฟังก์ชันบีบอัดและอัปโหลดรูปภาพแบบ Base64
+    // ==========================================
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          
+          // กำหนดขนาดสูงสุดเพื่อไม่ให้ Base64 ใหญ่เกินไป (เหมาะกับ Google Sheets)
+          const MAX_WIDTH = 400;
+          const MAX_HEIGHT = 400;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // แปลงเป็น Base64 แบบ JPEG พร้อมลดคุณภาพ 50% ให้ไฟล์เล็กที่สุด
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+
+          // นำ Base64 ไปใส่ในช่อง URL Input และแสดง Preview
+          document.getElementById('modal-image-url').value = dataUrl;
+          updatePreview(dataUrl);
+        }
+        img.src = e.target.result;
+      }
+      reader.readAsDataURL(file);
+    }
+
+    // =======================
+    // ⬇️ Export Employees to Excel (.xlsx) ด้วย SheetJS
+    // =======================
+    function exportEmployeesExcel() {
+      if (!store.employees || store.employees.length === 0) {
+        Dialog.alert("ไม่มีข้อมูลสำหรับ Export", "แจ้งเตือน", "warning");
+        return;
+      }
+
+      const exportData = store.employees.map(e => {
+        const branch = store.branches.find(b => b.id == e.branchId)?.name || '';
+        const dept = store.departments.find(d => d.id == e.deptId)?.name || '';
+
+        return {
+          "ชื่อ": e.name || '',
+          "ตำแหน่ง": e.position || '',
+          "สาขา": branch,
+          "แผนก": dept
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const wscols = [
+        {wch: 30}, {wch: 30}, {wch: 20}, {wch: 20}
+      ];
+      worksheet['!cols'] = wscols;
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Employees Data");
+
+      XLSX.writeFile(workbook, `employees-export-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    }
+
+    // =======================
+    // ⬆️ Import Employees from Excel (.xlsx) ด้วย SheetJS
+    // =======================
+    function triggerImportEmployees() {
+      const el = document.getElementById("employee-import-file");
+      if (el) el.click();
+    }
+
+    function importEmployeesExcel(event) {
+      const file = event?.target?.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const rawData = XLSX.utils.sheet_to_json(worksheet);
+
+          if (!rawData || rawData.length === 0) {
+            Dialog.alert("ไม่พบข้อมูลในไฟล์ Excel หรือไฟล์ว่างเปล่า", "Import ล้มเหลว", "warning");
+            return;
+          }
+
+          let addedCount = 0;
+          let updatedCount = 0;
+
+          rawData.forEach(row => {
+            const empName = (row["ชื่อ"] || row["ชื่อพนักงาน"] || row["พนักงาน"] || "").toString().trim();
+            if (!empName) return; // ข้ามบรรทัดที่ไม่มีชื่อพนักงาน
+
+            // ค้นหา Branch ID จากสาขา
+            let bId = store.branches?.[0]?.id ?? 1;
+            if (row["สาขา"]) {
+              const foundB = store.branches.find(b => b.name.trim() === row["สาขา"].trim());
+              if (foundB) bId = foundB.id;
+            }
+
+            // ค้นหา Department ID จากแผนก
+            let dId = store.departments?.[0]?.id ?? 1;
+            if (row["แผนก"]) {
+              const foundD = store.departments.find(d => d.name.trim() === row["แผนก"].trim());
+              if (foundD) dId = foundD.id;
+            }
+
+            const pos = (row["ตำแหน่ง"] || "").toString().trim();
+
+            // ตรวจสอบว่ามีชื่อพนักงานนี้อยู่แล้วหรือไม่ (เพื่ออัปเดตแทนการสร้างซ้ำ)
+            const existingIndex = store.employees.findIndex(emp => emp.name.toLowerCase() === empName.toLowerCase());
+
+            if (existingIndex >= 0) {
+              // มีพนักงานคนนี้อยู่แล้ว -> อัปเดตข้อมูล
+              const existing = store.employees[existingIndex];
+              existing.position = pos || existing.position;
+              existing.branchId = bId;
+              existing.deptId = dId;
+              updatedCount++;
+            } else {
+              // ไม่มีพนักงานคนนี้ -> สร้างใหม่
+              const newEmp = {
+                id: Date.now() + Math.floor(Math.random() * 100000),
+                name: empName,
+                position: pos || "พนักงาน",
+                branchId: bId,
+                deptId: dId
+              };
+              store.employees.push(newEmp);
+              addedCount++;
+            }
+          });
+
+          // อัปเดต UI และบันทึกลง Database
+          setupUI();
+          saveStoreToGAS();
+          
+          Dialog.alert(`<b>Import ไฟล์พนักงานสำเร็จ!</b><br>- เพิ่มใหม่: ${addedCount} คน<br>- อัปเดตเดิม: ${updatedCount} คน`, "สำเร็จ", "success");
+
+        } catch (err) {
+          console.error(err);
+          Dialog.alert("กรุณาตรวจสอบให้แน่ใจว่าเป็นไฟล์ Excel ที่มีคอลัมน์ ชื่อ, ตำแหน่ง, สาขา, แผนก", "Import ล้มเหลว", "error");
+        } finally {
+          event.target.value = ""; // รีเซ็ต input file
+        }
+      };
+      
+      reader.readAsArrayBuffer(file);
+    }
+
+    // ==========================================
+    // 📄 ระบบ Pagination
+    // ==========================================
+    let currentAssetPage = 1;
+    let currentEmployeePage = 1;
+    const ITEMS_PER_PAGE = 10;
+
+    function renderPaginationUI(containerId, currentPage, totalItems, onPageChange) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+      
+      // Ensure current page is valid
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+
+      if (totalItems === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="flex items-center justify-between px-6 py-3 bg-slate-50 border-t">
+          <div class="hidden sm:block text-sm text-slate-600">
+            แสดง <span class="font-bold text-slate-800">${startIndex + 1}</span> ถึง <span class="font-bold text-slate-800">${endIndex}</span> จากทั้งหมด <span class="font-bold text-slate-800">${totalItems}</span> รายการ
+          </div>
+          <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+            <button onclick="${onPageChange}(-1)" ${currentPage === 1 ? 'disabled' : ''} class="px-3 py-1.5 border rounded-lg text-sm font-bold ${currentPage === 1 ? 'text-slate-400 bg-slate-100 cursor-not-allowed' : 'text-slate-700 bg-white hover:bg-slate-100 shadow-sm'} transition">
+              ← ก่อนหน้า
+            </button>
+            <span class="text-sm font-bold text-slate-700 px-3">
+              หน้า ${currentPage} / ${totalPages}
+            </span>
+            <button onclick="${onPageChange}(1)" ${currentPage === totalPages ? 'disabled' : ''} class="px-3 py-1.5 border rounded-lg text-sm font-bold ${currentPage === totalPages ? 'text-slate-400 bg-slate-100 cursor-not-allowed' : 'text-slate-700 bg-white hover:bg-slate-100 shadow-sm'} transition">
+              ถัดไป →
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function changeAssetPage(delta) {
+      currentAssetPage += delta;
+      renderAssetTable();
+    }
+
+    function changeEmployeePage(delta) {
+      currentEmployeePage += delta;
+      renderEmployeeTable();
+    }
+
+    // ✅ renderAssetTable: ค้นหาด้วยเลขทะเบียน และชื่อสินทรัพย์
+    function renderAssetTable() {
+      const tbody = document.getElementById('asset-table-body');
+
+      let filtered = store.selectedCategoryFilter === 'all'
+        ? (store.assets || [])
+        : (store.assets || []).filter(a => a.categoryId == store.selectedCategoryFilter);
+
+      const q = (store.assetSearchQuery || "").trim().toLowerCase();
+      if (q) {
+        // อัปเดตให้ค้นหาได้ทั้ง "ทะเบียน" และ "ชื่อสินทรัพย์"
+        filtered = filtered.filter(a => 
+          String(a?.assetNo || "").toLowerCase().includes(q) ||
+          String(a?.name || "").toLowerCase().includes(q)
+        );
+      }
+
+      // ✅ เรียงลำดับข้อมูลตาม "เลขทะเบียน" จากน้อยไปมาก (A-Z, 0-9)
+      filtered.sort((a, b) => {
+        const noA = String(a.assetNo || "").toUpperCase();
+        const noB = String(b.assetNo || "").toUpperCase();
+        // ใช้ localeCompare แบบ numeric เพื่อให้เลขเรียงถูกต้อง (เช่น AS-2 มาก่อน AS-10)
+        return noA.localeCompare(noB, undefined, { numeric: true, sensitivity: 'base' });
+      });
+
+      // ตัดข้อมูลตาม Pagination
+      const totalItems = filtered.length;
+      const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+      if (currentAssetPage > totalPages) currentAssetPage = totalPages;
+      
+      const startIndex = (currentAssetPage - 1) * ITEMS_PER_PAGE;
+      const paginatedData = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+      tbody.innerHTML = paginatedData.map(a => {
+        const emp = store.employees.find(x => x.id == a.employeeId),
+              branch = store.branches.find(x => x.id == emp?.branchId),
+              dept = store.departments.find(x => x.id == emp?.deptId),
+              cat = store.categories.find(x => x.id == a.categoryId);
+
+        const sCol = getStatusColor(a.status);
+        const displayStatus = getStatusDisplay(a.status);
+
+        return `<tr class="hover:bg-slate-50 transition cursor-pointer" onclick="viewAssetDetail(${a.id})">
+          <td class="px-6 py-3">
+            <img src="${a.imageUrl}" class="asset-img" onerror="this.src='https://via.placeholder.com/50'">
+          </td>
+
+          <td class="px-6 py-3">
+            <div class="flex gap-2">
+              <span class="text-[11px] font-extrabold px-2 py-1 bg-slate-900 text-white rounded">${a.assetNo||'-'}</span>
+              <span class="text-[10px] bg-slate-100 text-slate-500 px-1 rounded font-bold">${cat?.name||'ทั่วไป'}</span>
+            </div>
+            <div class="font-bold text-slate-800 mt-1">${a.name}</div>
+          </td>
+
+          <td class="px-6 py-3 text-xs hidden lg:table-cell">
+            <div class="font-bold">${branch?.name||'-'}</div>
+            <div class="text-slate-500">${dept?.name||'-'}</div>
+          </td>
+
+          <td class="px-6 py-3 text-xs text-blue-600 font-bold hidden lg:table-cell">
+            👤 ${emp?.name||'-'}
+          </td>
+
+          <td class="px-6 py-3 text-center">
+            <span class="status-badge ${sCol}">${displayStatus}</span>
+          </td>
+
+          <td class="px-6 py-3 text-right hidden lg:table-cell">
+            ${(a.price||0).toLocaleString()}
+          </td>
+
+          <td class="px-6 py-3 text-center">
+            <button onclick="event.stopPropagation(); editAsset(${a.id})" class="text-blue-500 font-bold text-xs mr-2">แก้ไข</button>
+            ${isAdmin() ? `<button onclick="event.stopPropagation(); deleteAsset(${a.id})" class="text-red-400 font-bold text-xs">ลบ</button>` : ''}
+          </td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="7" class="p-8 text-center text-slate-400">ไม่มีข้อมูล</td></tr>';
+
+      // Render Pagination
+      renderPaginationUI('asset-pagination-container', currentAssetPage, totalItems, 'changeAssetPage');
+    }
+
+    async function deleteAsset(id) { if(!requireAdmin("ลบ")) return; if (await Dialog.confirm("คุณแน่ใจหรือไม่ที่จะลบสินทรัพย์นี้?", "ยืนยันการลบ")) { store.assets = (store.assets||[]).filter(a => a.id !== id); setupUI(); saveStoreToGAS(); Toast.show("ลบสินทรัพย์เรียบร้อย"); } }
+
+    let currentDetailAssetId = null;
+    function viewAssetDetail(id) {
+      const a = store.assets.find(x => x.id === id); if (!a) return; ensureAssetAudit(a); currentDetailAssetId = id;
+      const cat = store.categories.find(c => c.id == a.categoryId), emp = store.employees.find(e => e.id == a.employeeId);
+
+      document.getElementById('detail-assetno').innerText = a.assetNo || '-';
+      document.getElementById('detail-name').innerText = a.name;
+      document.getElementById('detail-category').innerText = cat?.name || 'ทั่วไป';
+      document.getElementById('detail-employee').innerText = emp ? `👤 ${emp.name}` : '-';
+      document.getElementById('detail-price').innerText = `ราคา: ${(a.price||0).toLocaleString()} ฿`;
+      
+      // จัดรูปแบบวันที่ก่อนแสดงผล
+      let purchaseDateStr = '-';
+      let safeDateStr = a.purchaseDate || (a.spec && a.spec.__purchaseDate ? a.spec.__purchaseDate : '');
+      if (safeDateStr) {
+         try {
+           const d = new Date(safeDateStr);
+           if (!isNaN(d.getTime())) {
+              purchaseDateStr = d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric'});
+           } else {
+              purchaseDateStr = safeDateStr;
+           }
+         } catch(e) {}
+      }
+      document.getElementById('detail-purchase-date').innerHTML = `<b>วันที่ซื้อ:</b> ${purchaseDateStr}`;
+
+      const img = document.getElementById('detail-image');
+      img.src = a.imageUrl || 'https://via.placeholder.com/600x300';
+      img.onerror = () => (img.src = 'https://via.placeholder.com/600x300');
+
+      document.getElementById('detail-tags').innerHTML = (a.tags||[]).map(t => `<span class="tag">#${t}</span>`).join('');
+      document.getElementById('detail-spec').innerHTML = specToText(a.spec).replace(/\n/g, '<br>') || 'ไม่มีข้อมูลสเปก';
+      
+      document.getElementById('detail-status').className = `px-2 py-1 rounded text-xs font-bold ${getStatusColor(a.status)}`;
+      document.getElementById('detail-status').innerText = getStatusDisplay(a.status);
+
+      const list = document.getElementById('detail-history');
+      list.innerHTML = (a.history||[]).map((h, i) => `<div class="tl-item">
+        <div class="flex justify-between">
+          <span class="pill bg-slate-100">${h.type}</span>
+          <span class="tl-meta">${formatDateTime(h.ts)} โดย ${h.by||'-'}</span>
+        </div>
+        <div class="tl-desc">${h.note||'-'} ${isAdmin()?`<button onclick="deleteHistoryLog(${a.id},${i})" class="text-red-400 text-xs ml-2">ลบ</button>`:''}</div>
+      </div>`).join('');
+
+      const modal = document.getElementById('asset-detail-modal');
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+    }
+    function hideAssetDetail() { document.getElementById('asset-detail-modal').classList.add('hidden'); document.getElementById('asset-detail-modal').classList.remove('flex'); currentDetailAssetId = null; }
+    function detailEdit() { if (!currentDetailAssetId) return; hideAssetDetail(); editAsset(currentDetailAssetId); }
+
+    async function addHistoryLog(assetId) {
+      const note = await Dialog.prompt("โปรดระบุรายละเอียดประวัติเพิ่มเติม:", "", "เพิ่มประวัติ"); if (!note) return;
+      logAssetEvent(assetId, { type: 'UPDATE', ts: nowISO(), by: currentUserName(), note: note });
+      viewAssetDetail(assetId); saveStoreToGAS(); Toast.show("บันทึกประวัติแล้ว");
+    }
+    async function addMaintenanceLog() {
+      if(!currentDetailAssetId) return;
+      const note = await Dialog.prompt("โปรดระบุสาเหตุการส่งซ่อม:", "ส่งซ่อม", "บันทึกการซ่อม"); if (!note) return;
+      logAssetEvent(currentDetailAssetId, { type: 'MAINTENANCE', ts: nowISO(), by: currentUserName(), note: note });
+      viewAssetDetail(currentDetailAssetId); saveStoreToGAS(); Toast.show("บันทึกการส่งซ่อมแล้ว", "warning");
+    }
+    async function deleteHistoryLog(assetId, i) {
+      if(!isAdmin()) return;
+      const a = store.assets.find(x => x.id == assetId); if(!a) return;
+      if(a.history[i].type === 'CREATE') return Dialog.alert('ห้ามลบประวัติเริ่มแรก', 'แจ้งเตือน', 'error');
+      if(await Dialog.confirm('คุณต้องการลบประวัตินี้ใช่หรือไม่?', 'ยืนยันการลบ')) { a.history.splice(i, 1); viewAssetDetail(assetId); saveStoreToGAS(); Toast.show("ลบประวัติเรียบร้อย"); }
+    }
+
+    function renderEmployeeTable() {
+      const tbody = document.getElementById('employee-table-body');
+      let data = store.employees || [];
+
+      // ตัดข้อมูลตาม Pagination
+      const totalItems = data.length;
+      const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+      if (currentEmployeePage > totalPages) currentEmployeePage = totalPages;
+      
+      const startIndex = (currentEmployeePage - 1) * ITEMS_PER_PAGE;
+      const paginatedData = data.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+      tbody.innerHTML = paginatedData.map(e => {
+        const branch = store.branches.find(b=>b.id==e.branchId);
+        const dept = store.departments.find(d=>d.id==e.deptId);
+        return `<tr>
+          <td class="px-6 py-4"><b>${e.name}</b><br><span class="text-xs text-slate-500">${e.position}</span></td>
+          <td class="px-6 py-4 hidden md:table-cell">
+            <div class="font-bold">${branch?.name||'-'}</div>
+            <div class="text-xs text-slate-500">${dept?.name||'-'}</div>
+          </td>
+          <td class="px-6 py-4 text-center">${(store.assets||[]).filter(a=>a.employeeId==e.id).length}</td>
+          <td class="px-6 py-4 text-center">
+            <button onclick="editEmployee(${e.id})" class="text-blue-500 text-xs mr-2 font-bold">แก้ไข</button>
+            ${isAdmin() ? `<button onclick="deleteEmployee(${e.id})" class="text-red-400 text-xs font-bold">ลบ</button>` : ''}
+          </td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="4" class="p-8 text-center text-slate-400">ไม่มีข้อมูล</td></tr>';
+
+      // Render Pagination
+      renderPaginationUI('employee-pagination-container', currentEmployeePage, totalItems, 'changeEmployeePage');
+    }
+    function renderCategoryList() { document.getElementById('category-list-container').innerHTML = (store.categories||[]).map(c => `<div class="p-4 flex justify-between group"><b>${c.name}</b><div class="opacity-0 group-hover:opacity-100"><button onclick="editCategory(${c.id})" class="text-blue-500 text-xs mr-2">แก้ไข</button>${isAdmin() ? `<button onclick="deleteCategory(${c.id})" class="text-red-400 text-xs">ลบ</button>` : ''}</div></div>`).join(''); }
+    function renderBranchList() { document.getElementById('branch-list-container').innerHTML = (store.branches||[]).map(b => `<div class="p-4 flex justify-between group"><div><b>${b.name}</b><div class="text-xs">${b.location||'-'}</div></div><div class="opacity-0 group-hover:opacity-100"><button onclick="editBranch(${b.id})" class="text-blue-500 text-xs mr-2">แก้ไข</button>${isAdmin() ? `<button onclick="deleteBranch(${b.id})" class="text-red-400 text-xs">ลบ</button>` : ''}</div></div>`).join(''); }
+    function renderDeptList() { document.getElementById('dept-list-container').innerHTML = (store.departments||[]).map(d => `<div class="p-4 flex justify-between group"><b>${d.name}</b><div class="opacity-0 group-hover:opacity-100"><button onclick="editDept(${d.id})" class="text-blue-500 text-xs mr-2">แก้ไข</button>${isAdmin() ? `<button onclick="deleteDept(${d.id})" class="text-red-400 text-xs">ลบ</button>` : ''}</div></div>`).join(''); }
+    function renderUserTable() { if(!isAdmin()) return; document.getElementById('user-table-body').innerHTML = (store.users||[]).map(u => `<tr><td class="px-6 py-4 font-bold">${u.username}</td><td class="px-6 py-4">${u.role}</td><td class="px-6 py-4 text-center"><button onclick="editUser('${u.username}')" class="text-blue-500 text-xs mr-2 font-bold">แก้ไข</button><button onclick="deleteUser('${u.username}')" class="text-red-400 text-xs font-bold">ลบ</button></td></tr>`).join(''); }
+
+    function showCategoryModal() { document.getElementById('category-form').reset(); document.getElementById('modal-category-id').value = ''; document.getElementById('category-modal').classList.remove('hidden'); }
+    function hideCategoryModal() { document.getElementById('category-modal').classList.add('hidden'); }
+    function editCategory(id) { const c = store.categories.find(x=>x.id==id); document.getElementById('modal-category-id').value = c.id; document.getElementById('category-modal-name').value = c.name; document.getElementById('category-modal').classList.remove('hidden'); }
+    async function deleteCategory(id) { if(!requireAdmin("ลบ")) return; if((store.assets||[]).some(a=>a.categoryId==id)) return Dialog.alert("มีสินทรัพย์อ้างอิงอยู่ ไม่สามารถลบได้", "แจ้งเตือน", "warning"); if(await Dialog.confirm("คุณต้องการลบประเภทนี้ใช่หรือไม่?")) { store.categories = (store.categories||[]).filter(x=>x.id!=id); setupUI(); saveStoreToGAS(); Toast.show("ลบเรียบร้อย"); } }
+    function handleCategorySubmit(e) { e.preventDefault(); const id = document.getElementById('modal-category-id').value; const data = { id: id ? parseInt(id) : Date.now(), name: document.getElementById('category-modal-name').value }; if(id) store.categories[store.categories.findIndex(x=>x.id==id)] = data; else store.categories.push(data); hideCategoryModal(); setupUI(); saveStoreToGAS(); Toast.show("บันทึกข้อมูลเรียบร้อย"); }
+
+    function showBranchModal() { document.getElementById('branch-form').reset(); document.getElementById('modal-branch-id').value = ''; document.getElementById('branch-modal').classList.remove('hidden'); }
+    function hideBranchModal() { document.getElementById('branch-modal').classList.add('hidden'); }
+    function editBranch(id) { const b = store.branches.find(x=>x.id==id); document.getElementById('modal-branch-id').value = b.id; document.getElementById('branch-modal-name').value = b.name; document.getElementById('branch-modal-loc').value = b.location||''; document.getElementById('branch-modal').classList.remove('hidden'); }
+    async function deleteBranch(id) { if(!requireAdmin("ลบ")) return; if((store.employees||[]).some(e=>e.branchId==id)) return Dialog.alert("มีพนักงานสังกัดอยู่ ไม่สามารถลบได้", "แจ้งเตือน", "warning"); if(await Dialog.confirm("คุณต้องการลบสาขานี้ใช่หรือไม่?")) { store.branches = (store.branches||[]).filter(x=>x.id!=id); setupUI(); saveStoreToGAS(); Toast.show("ลบเรียบร้อย"); } }
+    function handleBranchSubmit(e) { e.preventDefault(); const id = document.getElementById('modal-branch-id').value; const data = { id: id ? parseInt(id) : Date.now(), name: document.getElementById('branch-modal-name').value, location: document.getElementById('branch-modal-loc').value }; if(id) store.branches[store.branches.findIndex(x=>x.id==id)] = data; else store.branches.push(data); hideBranchModal(); setupUI(); saveStoreToGAS(); Toast.show("บันทึกข้อมูลเรียบร้อย"); }
+
+    function showDeptModal() { document.getElementById('dept-form').reset(); document.getElementById('modal-dept-id').value = ''; document.getElementById('dept-modal').classList.remove('hidden'); }
+    function hideDeptModal() { document.getElementById('dept-modal').classList.add('hidden'); }
+    function editDept(id) { const d = store.departments.find(x=>x.id==id); document.getElementById('modal-dept-id').value = d.id; document.getElementById('dept-modal-name').value = d.name; document.getElementById('dept-modal').classList.remove('hidden'); }
+    async function deleteDept(id) { if(!requireAdmin("ลบ")) return; if((store.employees||[]).some(e=>e.deptId==id)) return Dialog.alert("มีพนักงานสังกัดอยู่ ไม่สามารถลบได้", "แจ้งเตือน", "warning"); if(await Dialog.confirm("คุณต้องการลบแผนกนี้ใช่หรือไม่?")) { store.departments = (store.departments||[]).filter(x=>x.id!=id); setupUI(); saveStoreToGAS(); Toast.show("ลบเรียบร้อย"); } }
+    function handleDeptSubmit(e) { e.preventDefault(); const id = document.getElementById('modal-dept-id').value; const data = { id: id ? parseInt(id) : Date.now(), name: document.getElementById('dept-modal-name').value }; if(id) store.departments[store.departments.findIndex(x=>x.id==id)] = data; else store.departments.push(data); hideDeptModal(); setupUI(); saveStoreToGAS(); Toast.show("บันทึกข้อมูลเรียบร้อย"); }
+
+    function showEmployeeModal() { document.getElementById('employee-form').reset(); document.getElementById('modal-emp-id').value = ''; document.getElementById('employee-modal').classList.remove('hidden'); }
+    function hideEmployeeModal() { document.getElementById('employee-modal').classList.add('hidden'); }
+    function editEmployee(id) { const emp = store.employees.find(x=>x.id==id); document.getElementById('modal-emp-id').value = emp.id; document.getElementById('emp-modal-name').value = emp.name; document.getElementById('emp-modal-pos').value = emp.position; document.getElementById('emp-modal-branch').value = emp.branchId; document.getElementById('emp-modal-dept').value = emp.deptId; document.getElementById('employee-modal').classList.remove('hidden'); }
+    async function deleteEmployee(id) { if(!requireAdmin("ลบ")) return; if((store.assets||[]).some(a=>a.employeeId==id)) return Dialog.alert("พนักงานท่านนี้ยังถือครองสินทรัพย์อยู่", "แจ้งเตือน", "warning"); if(await Dialog.confirm("คุณต้องการลบพนักงานนี้ใช่หรือไม่?")) { store.employees = (store.employees||[]).filter(x=>x.id!=id); setupUI(); saveStoreToGAS(); Toast.show("ลบเรียบร้อย"); } }
+    function handleEmployeeSubmit(e) { e.preventDefault(); const id = document.getElementById('modal-emp-id').value; const data = { id: id ? parseInt(id) : Date.now(), name: document.getElementById('emp-modal-name').value, position: document.getElementById('emp-modal-pos').value, branchId: parseInt(document.getElementById('emp-modal-branch').value), deptId: parseInt(document.getElementById('emp-modal-dept').value) }; if(id) store.employees[store.employees.findIndex(x=>x.id==id)] = data; else store.employees.push(data); hideEmployeeModal(); setupUI(); saveStoreToGAS(); Toast.show("บันทึกข้อมูลเรียบร้อย"); }
+
+    function showAssetModal() { 
+      document.getElementById('asset-form').reset(); 
+      document.getElementById('modal-asset-id').value = ''; 
+      document.getElementById('modal-spec').value = ''; 
+      document.getElementById('modal-purchase-date').value = ''; // Clear Date
+      document.getElementById('modal-assetno').value = getNextAssetNo(); 
+      updatePreview(''); 
+      document.getElementById('asset-modal').classList.remove('hidden'); 
+    }
+    
+    function hideAssetModal() { document.getElementById('asset-modal').classList.add('hidden'); }
+    function updatePreview(url) { const img = document.getElementById('modal-image-preview'); if (url) { img.src = url; img.classList.remove('hidden'); } else img.classList.add('hidden'); }
+    
+    function editAsset(id) {
+      const a = store.assets.find(x=>x.id==id);
+      document.getElementById('modal-asset-id').value = a.id;
+      document.getElementById('modal-assetno').value = a.assetNo;
+      document.getElementById('modal-tags').value = tagsToString(a.tags);
+      document.getElementById('modal-name').value = a.name;
+      document.getElementById('modal-category').value = a.categoryId;
+      
+      let pDate = a.purchaseDate || (a.spec && a.spec.__purchaseDate ? a.spec.__purchaseDate : '');
+      if (pDate) {
+        try {
+          const d = new Date(pDate);
+          if (!isNaN(d.getTime())) {
+            // ดึงค่า ปี-เดือน-วัน เพื่อให้ใช้กับ input type="date" ได้พอดี
+            pDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+          }
+        } catch(e) {}
+      }
+      document.getElementById('modal-purchase-date').value = pDate;
+
+      document.getElementById('modal-employee').value = a.employeeId||'';
+      document.getElementById('modal-price').value = a.price;
+      document.getElementById('modal-status').value = a.status;
+      document.getElementById('modal-image-url').value = a.imageUrl;
+      document.getElementById('modal-spec').value = specToText(a.spec);
+      updatePreview(a.imageUrl);
+      document.getElementById('asset-modal').classList.remove('hidden');
+    }
+
+    function handleAssetSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('modal-asset-id').value;
+      const assetId = id ? parseInt(id) : null;
+
+      let specObj = null;
+      try { specObj = parseSpecInput(document.getElementById('modal-spec').value); }
+      catch(err) { return Dialog.alert(err.message, "สเปกไม่ถูกต้อง", "error"); }
+
+      let assetNo = document.getElementById('modal-assetno').value.trim().toUpperCase() || getNextAssetNo();
+      if(isAssetNoDuplicate(assetNo, assetId)) return Dialog.alert("เลขทะเบียนนี้ถูกใช้งานแล้ว กรุณาเปลี่ยนใหม่", "ทะเบียนซ้ำ", "error");
+
+      const pd = document.getElementById('modal-purchase-date').value; // Save Date
+
+      const payload = {
+        id: assetId ?? Date.now(),
+        assetNo,
+        tags: normalizeTags(document.getElementById('modal-tags').value),
+        name: document.getElementById('modal-name').value,
+        categoryId: parseInt(document.getElementById('modal-category').value),
+        employeeId: document.getElementById('modal-employee').value ? parseInt(document.getElementById('modal-employee').value) : null,
+        price: parseFloat(document.getElementById('modal-price').value),
+        purchaseDate: pd, 
+        status: document.getElementById('modal-status').value,
+        imageUrl: document.getElementById('modal-image-url').value,
+        spec: specObj || {}
+      };
+
+      // ✅ แบ็คอัพวันที่เก็บลง Spec ป้องกันข้อมูลหายเวลา Sync กับ Sheets
+      payload.spec.__purchaseDate = pd;
+
+      const user = currentUserName(), ts = nowISO();
+
+      if(!assetId) {
+        payload.createdAt = ts; payload.updatedAt = ts; payload.updatedBy = user;
+        payload.history = [{ ts, type:'CREATE', by:user, note:'สร้างรายการ' }];
+        store.assets.push(payload);
+      } else {
+        const old = store.assets.find(x=>x.id===assetId);
+        payload.createdAt = old.createdAt;
+        payload.updatedAt = ts;
+        payload.updatedBy = user;
+        payload.history = old.history;
+        store.assets[store.assets.findIndex(x=>x.id==assetId)] = payload;
+        logAssetEvent(assetId, { type:'UPDATE', ts, by:user });
+      }
+
+      hideAssetModal(); setupUI(); saveStoreToGAS(); Toast.show("บันทึกสินทรัพย์เรียบร้อย");
+    }
+
+    function showUserModal() { if(!requireAdmin("จัดการผู้ใช้งาน")) return; document.getElementById('user-form').reset(); document.getElementById('modal-user-username-old').value = ''; document.getElementById('user-modal').classList.remove('hidden'); }
+    function hideUserModal() { document.getElementById('user-modal').classList.add('hidden'); }
+    function editUser(u) { if(!requireAdmin("แก้ไข")) return; const user = store.users.find(x=>x.username===u); document.getElementById('modal-user-username-old').value = user.username; document.getElementById('user-modal-username').value = user.username; document.getElementById('user-modal-password').value = user.password; document.getElementById('user-modal-role').value = user.role; document.getElementById('user-modal').classList.remove('hidden'); }
+    async function deleteUser(u) { if(!requireAdmin("ลบ")) return; if(store.currentUser.username === u) return Dialog.alert("ไม่สามารถลบตัวเองได้", "แจ้งเตือน", "error"); if(await Dialog.confirm(`คุณต้องการลบผู้ใช้ ${u} ใช่หรือไม่?`)) { store.users = store.users.filter(x=>x.username!==u); renderUserTable(); saveStoreToGAS(); Toast.show("ลบผู้ใช้เรียบร้อย"); } }
+    function handleUserSubmit(e) { e.preventDefault(); const oldU = document.getElementById('modal-user-username-old').value, u = document.getElementById('user-modal-username').value.toLowerCase().trim(), p = document.getElementById('user-modal-password').value, r = document.getElementById('user-modal-role').value; if(store.users.some(x=>x.username===u && x.username!==oldU)) return Dialog.alert("ชื่อผู้ใช้งานนี้ถูกใช้ไปแล้ว", "ข้อมูลซ้ำ", "error"); if(oldU) store.users[store.users.findIndex(x=>x.username===oldU)] = {username:u, password:p, role:r}; else store.users.push({username:u, password:p, role:r}); hideUserModal(); renderUserTable(); saveStoreToGAS(); Toast.show("บันทึกผู้ใช้เรียบร้อย"); }
+
+    let statusChart = null;
+    function updateDashboardStats() {
+      document.getElementById('stat-total-count').innerText = (store.assets||[]).length;
+      document.getElementById('stat-total-value').innerText = (store.assets||[]).reduce((s, x) => s + (x.price || 0), 0).toLocaleString();
+      document.getElementById('stat-emp-count').innerText = (store.employees||[]).length;
+    }
+
+    function initCharts() {
+      const ctx = document.getElementById('statusChart')?.getContext('2d');
+      if(!ctx) return;
+
+      if(statusChart) statusChart.destroy();
+
+      const activeCount = (store.assets||[]).filter(a => getStatusDisplay(a.status) === 'ปกติ').length;
+      const brokenCount = (store.assets||[]).filter(a => getStatusDisplay(a.status) === 'ชำรุด').length;
+      const maintenanceCount = (store.assets||[]).filter(a => getStatusDisplay(a.status) === 'ซ่อม').length;
+      const availableCount = (store.assets||[]).filter(a => getStatusDisplay(a.status) === 'ว่าง').length;
+
+      statusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['ปกติ', 'ชำรุด', 'ซ่อม', 'ว่าง'],
+          datasets: [{
+            data: [activeCount, brokenCount, maintenanceCount, availableCount],
+            backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#3b82f6'],
+            borderWidth: 0
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '75%' }
+      });
+
+      const list = document.getElementById("category-count-list");
+      const totalAssets = (store.assets||[]).length;
+      document.getElementById("cat-total").innerText = totalAssets;
+
+      list.innerHTML = (store.categories||[])
+        .map(c => {
+          const count = (store.assets||[]).filter(a=>a.categoryId==c.id).length;
+          return { name: c.name, count, percent: totalAssets>0?Math.round((count/totalAssets)*100):0 };
+        })
+        .sort((a,b)=>b.count-a.count)
+        .map(r => `
+          <div class="flex items-center justify-between p-4 rounded-xl border bg-slate-50">
+            <div>
+              <div class="font-bold">${r.name}</div>
+              <div class="text-xs text-slate-500">${r.percent}% ของทั้งหมด</div>
+            </div>
+            <div class="text-2xl font-extrabold text-blue-600">${r.count}</div>
+          </div>
+        `).join("");
+    }
+  </script>
+</body>
+</html>
