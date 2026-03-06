@@ -7,7 +7,6 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- เพิ่มไลบรารี SheetJS สำหรับจัดการไฟล์ Excel (.xlsx) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -19,8 +18,7 @@
     .fade-in { animation: fadeIn 0.3s ease-in-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     #login-page { background-color: #0f172a; position: fixed; inset: 0; overflow: hidden; }
-    
-    /* 🎨 Animations for Glassmorphism Background */
+
     @keyframes blob {
       0% { transform: translate(0px, 0px) scale(1); }
       33% { transform: translate(30px, -50px) scale(1.1); }
@@ -30,7 +28,7 @@
     .animate-blob { animation: blob 7s infinite; }
     .animation-delay-2000 { animation-delay: 2s; }
     .animation-delay-4000 { animation-delay: 4s; }
-    
+
     .asset-img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; background-color: #f1f5f9; }
     .asset-img-large { width: 100%; height: 150px; object-fit: cover; border-radius: 12px; margin-bottom: 1rem; border: 1px solid #e2e8f0; }
     .scroll-hide::-webkit-scrollbar { display: none; }
@@ -68,10 +66,8 @@
 
 <body class="antialiased">
 
-  <!-- Custom Toast Container -->
   <div id="custom-toast-container" class="fixed top-4 right-4 z-[4000] flex flex-col gap-2 pointer-events-none"></div>
 
-  <!-- Custom Dialog -->
   <div id="custom-dialog" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[3000] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-200">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200" id="custom-dialog-panel">
       <div class="p-6 text-center">
@@ -83,26 +79,21 @@
     </div>
   </div>
 
-  <!-- Loading Screen (For Google Sheets Fetching) -->
   <div id="full-page-loader" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[2000] hidden flex flex-col items-center justify-center text-white">
     <div class="animate-spin text-5xl mb-4">⚙️</div>
     <div class="font-bold tracking-widest animate-pulse">กำลังโหลดข้อมูลจาก Google Sheets...</div>
   </div>
 
-  <!-- Sync Toast Notification -->
   <div id="sync-toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 z-[1500] transition-all duration-300 transform translate-y-full opacity-0">
     <div class="animate-spin">🔄</div>
     <div class="text-sm font-bold tracking-wide">กำลังซิงค์ข้อมูลกับ Sheets...</div>
   </div>
 
-  <!-- Premium Login Page (Glassmorphism) -->
   <div id="login-page" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-    <!-- Abstract Background Blobs -->
     <div class="absolute top-[-10%] left-[-10%] w-72 md:w-96 h-72 md:h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
     <div class="absolute top-[20%] right-[-10%] w-72 md:w-96 h-72 md:h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
     <div class="absolute bottom-[-20%] left-[20%] w-72 md:w-96 h-72 md:h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-4000"></div>
 
-    <!-- Glass Card -->
     <div class="relative bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] w-full max-w-md overflow-hidden transition-all duration-500 transform hover:scale-[1.02]">
       <div class="p-8 text-center border-b border-white/10 relative">
         <button onclick="showGasSetup()" class="absolute top-4 right-4 backend-badge bg-white/20 backdrop-blur text-white text-[10px] font-extrabold px-3 py-1.5 rounded-full hover:bg-white/30 transition shadow-sm">
@@ -132,10 +123,8 @@
     </div>
   </div>
 
-  <!-- Main App Layout -->
   <div id="app-layout" class="flex min-h-screen overflow-hidden hidden">
 
-    <!-- Sidebar (Desktop) -->
     <aside class="w-64 bg-slate-900 text-slate-300 hidden md:flex flex-col shrink-0">
       <div class="p-6">
         <h1 class="text-xl font-bold text-white flex items-center gap-2">📦 ASSET-PRO</h1>
@@ -167,7 +156,6 @@
       </div>
     </aside>
 
-    <!-- Mobile Topbar -->
     <header class="md:hidden sticky top-0 z-50 bg-white/95 backdrop-blur border-b safe-area">
       <div class="flex items-center justify-between px-4 py-3">
         <button onclick="toggleMobileNav(true)" class="px-3 py-2 rounded-lg border text-sm font-extrabold">☰ เมนู</button>
@@ -178,7 +166,6 @@
       </div>
     </header>
 
-    <!-- Mobile Drawer -->
     <div id="mobile-nav" class="md:hidden fixed inset-0 z-[500] hidden">
       <div class="absolute inset-0 bg-black/50" onclick="toggleMobileNav(false)"></div>
       <div class="absolute left-0 top-0 bottom-0 w-[78%] max-w-xs bg-slate-900 text-slate-200 p-4 safe-area">
@@ -201,11 +188,9 @@
       </div>
     </div>
 
-    <!-- Main Content -->
     <main class="flex-1 overflow-y-auto bg-slate-50">
       <div class="p-4 sm:p-6 w-full max-w-none mx-0">
 
-        <!-- Dashboard -->
         <section id="section-dashboard" class="fade-in space-y-6">
           <h2 class="text-2xl font-bold text-slate-800">แดชบอร์ดภาพรวม</h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
@@ -237,7 +222,6 @@
           </div>
         </section>
 
-        <!-- Assets -->
         <section id="section-assets" class="fade-in hidden space-y-6">
           <div class="flex flex-col gap-3">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
@@ -247,14 +231,13 @@
 
               <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <button onclick="exportAssetsExcel()"
-                  class="bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-bold hover:bg-emerald-700 transition w-full sm:w-auto">
-                  ⬆️ Export Excel
+                  class="bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-bold hover:bg-emerald-700 transition w-full sm:w-auto flex items-center justify-center gap-2">
+                  <span>⬆️</span> Export Excel
                 </button>
 
-                <!-- พนักงาน (STAFF) สามารถกดปุ่มนี้เพื่อ Import ได้ -->
                 <button onclick="triggerImportAssets()"
-                  class="bg-white border px-4 py-2.5 rounded-lg font-bold hover:bg-slate-50 transition w-full sm:w-auto">
-                  ⬇️ Import Excel
+                  class="bg-white border px-4 py-2.5 rounded-lg font-bold hover:bg-slate-50 transition w-full sm:w-auto flex items-center justify-center gap-2">
+                  <span>⬇️</span> Import Excel
                 </button>
 
                 <button onclick="showAssetModal()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 shadow-lg transition w-full sm:w-auto">
@@ -263,7 +246,6 @@
               </div>
             </div>
 
-            <!-- Search Bar (ค้นหาด้วยเลขทะเบียน) -->
             <div class="bg-white rounded-xl border shadow-sm p-3 flex flex-col sm:flex-row gap-2 sm:items-center">
               <div class="flex-1">
                 <label class="text-xs font-bold text-slate-500 uppercase">ค้นหาเลขทะเบียน / ชื่อ</label>
@@ -299,24 +281,22 @@
                 <tbody id="asset-table-body" class="divide-y divide-slate-100"></tbody>
               </table>
             </div>
-            <!-- Pagination Container for Assets -->
             <div id="asset-pagination-container"></div>
           </div>
 
           <input id="asset-import-file" type="file" accept=".xlsx, .xls, .csv" class="hidden" onchange="importAssetsExcel(event)">
         </section>
 
-        <!-- Organization -->
         <section id="section-employees" class="fade-in hidden space-y-8">
           <div class="space-y-4">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <h2 class="text-2xl font-bold text-slate-800">จัดการรายชื่อพนักงาน</h2>
               <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <button onclick="exportEmployeesExcel()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-bold hover:bg-emerald-700 transition w-full sm:w-auto">
-                  ⬆️ Export Excel
+                <button onclick="exportEmployeesExcel()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-bold hover:bg-emerald-700 transition w-full sm:w-auto flex items-center justify-center gap-2">
+                  <span>⬆️</span> Export Excel
                 </button>
-                <button onclick="triggerImportEmployees()" class="bg-white border px-4 py-2.5 rounded-lg font-bold hover:bg-slate-50 transition w-full sm:w-auto">
-                  ⬇️ Import Excel
+                <button onclick="triggerImportEmployees()" class="bg-white border px-4 py-2.5 rounded-lg font-bold hover:bg-slate-50 transition w-full sm:w-auto flex items-center justify-center gap-2">
+                  <span>⬇️</span> Import Excel
                 </button>
                 <button onclick="showEmployeeModal()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 shadow-lg w-full sm:w-auto">
                   + เพิ่มพนักงาน
@@ -335,7 +315,6 @@
                 </thead>
                 <tbody id="employee-table-body" class="divide-y divide-slate-100"></tbody>
               </table>
-              <!-- Pagination Container for Employees -->
               <div id="employee-pagination-container"></div>
             </div>
           </div>
@@ -364,11 +343,9 @@
             </div>
           </div>
 
-          <!-- Input สำหรับ Import พนักงาน -->
           <input id="employee-import-file" type="file" accept=".xlsx, .xls, .csv" class="hidden" onchange="importEmployeesExcel(event)">
         </section>
 
-        <!-- Users -->
         <section id="section-users" class="fade-in hidden space-y-6">
           <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
             <h2 class="text-2xl font-bold text-slate-800">จัดการผู้ใช้งาน</h2>
@@ -392,7 +369,6 @@
     </main>
   </div>
 
-  <!-- Google Sheets Setup Modal -->
   <div id="gas-setup-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[2000]">
     <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
       <div class="p-6 bg-slate-900 text-white flex items-center justify-between">
@@ -415,7 +391,6 @@
     </div>
   </div>
 
-  <!-- ==================== MODALS ==================== -->
   <div id="asset-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[200]">
     <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
       <div class="p-6 bg-slate-900 text-white flex justify-between items-center shrink-0">
@@ -424,19 +399,16 @@
       </div>
       <form id="asset-form" class="p-6 space-y-4 overflow-y-auto" onsubmit="handleAssetSubmit(event)">
         <input type="hidden" id="modal-asset-id">
-        <img id="modal-image-preview" src="" class="asset-img-large hidden" alt="Preview">
-        
-        <!-- ส่วนอัปโหลดรูปภาพที่ปรับปรุงใหม่ -->
+        <img id="modal-image-preview" src="" class="asset-img-large hidden relative" alt="Preview">
+
         <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
           <label class="block text-xs font-bold text-blue-800 mb-2">📸 รูปภาพ</label>
           <div class="flex gap-2">
-            <!-- ปุ่มเลือกไฟล์รูปภาพจากเครื่อง (ไม่มี capture) -->
             <input type="file" id="modal-image-file" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
             <button type="button" onclick="document.getElementById('modal-image-file').click()" class="flex-1 py-2.5 bg-white border border-blue-300 rounded-lg text-sm text-blue-600 font-bold hover:bg-blue-100 transition shadow-sm flex items-center justify-center gap-2">
               <span>📁</span> เลือกไฟล์
             </button>
 
-            <!-- ปุ่มเปิดกล้องถ่ายรูป (มี capture="environment" เพื่อบังคับเปิดกล้องหลัง) -->
             <input type="file" id="modal-image-camera" accept="image/*" capture="environment" class="hidden" onchange="handleImageUpload(event)">
             <button type="button" onclick="document.getElementById('modal-image-camera').click()" class="flex-1 py-2.5 bg-white border border-blue-300 rounded-lg text-sm text-blue-600 font-bold hover:bg-blue-100 transition shadow-sm flex items-center justify-center gap-2">
               <span>📷</span> ถ่ายรูป
@@ -446,10 +418,9 @@
 
         <div><label class="block text-xs font-bold text-slate-500 mb-1">ทะเบียน</label><input type="text" id="modal-assetno" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
         <div><label class="block text-xs font-bold text-slate-500 mb-1">แท็ก (คั่นด้วย ,)</label><input type="text" id="modal-tags" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
-        
-        <!-- ซ่อนช่องกรอก URL รูปภาพตามที่ต้องการ -->
+
         <div class="hidden"><label class="block text-xs font-bold text-slate-500 mb-1">หรือ ระบุลิงก์ URL รูปภาพ</label><input type="text" id="modal-image-url" class="w-full px-3 py-2 border rounded-lg text-sm" oninput="updatePreview(this.value)" placeholder="https://..."></div>
-        
+
         <div class="grid grid-cols-2 gap-4">
           <div class="col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">ชื่อ</label><input type="text" id="modal-name" required class="w-full px-3 py-2 border rounded-lg text-sm"></div>
           <div><label class="block text-xs font-bold text-slate-500 mb-1">ประเภท</label><select id="modal-category" required class="w-full px-3 py-2 border rounded-lg text-sm"></select></div>
@@ -467,7 +438,10 @@
           </div>
         </div>
         <div><label class="block text-xs font-bold text-slate-500 mb-1">สเปก (Key: Value)</label><textarea id="modal-spec" rows="4" class="w-full px-3 py-2 border rounded-lg font-mono text-sm"></textarea></div>
-        <div class="pt-4 flex gap-3"><button type="button" onclick="hideAssetModal()" class="flex-1 py-2 border rounded-lg font-bold">ยกเลิก</button><button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold">บันทึก</button></div>
+        <div class="pt-4 flex gap-3">
+          <button type="button" onclick="hideAssetModal()" class="flex-1 py-2 border rounded-lg font-bold">ยกเลิก</button>
+          <button type="submit" id="asset-submit-btn" class="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold transition">บันทึก</button>
+        </div>
       </form>
     </div>
   </div>
@@ -499,7 +473,6 @@
     </div>
   </div>
 
-  <!-- Other Modals -->
   <div id="employee-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[200]"><div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"><div class="p-6 bg-emerald-900 text-white flex justify-between items-center"><h3 class="font-bold">พนักงาน</h3><button onclick="hideEmployeeModal()" class="text-white/60">✕</button></div><form id="employee-form" class="p-6 space-y-4" onsubmit="handleEmployeeSubmit(event)"><input type="hidden" id="modal-emp-id"><div><label class="block text-xs font-bold text-slate-500 mb-1">ชื่อ</label><input type="text" id="emp-modal-name" required class="w-full px-3 py-2 border rounded-lg text-sm"></div><div><label class="block text-xs font-bold text-slate-500 mb-1">ตำแหน่ง</label><input type="text" id="emp-modal-pos" required class="w-full px-3 py-2 border rounded-lg text-sm"></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-bold text-slate-500 mb-1">สาขา</label><select id="emp-modal-branch" class="w-full px-3 py-2 border rounded-lg text-sm"></select></div><div><label class="block text-xs font-bold text-slate-500 mb-1">แผนก</label><select id="emp-modal-dept" class="w-full px-3 py-2 border rounded-lg text-sm"></select></div></div><div class="flex gap-3"><button type="button" onclick="hideEmployeeModal()" class="flex-1 py-2 border rounded-lg">ยกเลิก</button><button type="submit" class="flex-1 py-2 bg-emerald-600 text-white rounded-lg">บันทึก</button></div></form></div></div>
   <div id="category-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[210]"><div class="bg-white rounded-xl w-full max-w-sm"><div class="p-4 border-b font-bold text-slate-700">ประเภท</div><form id="category-form" class="p-4 space-y-4" onsubmit="handleCategorySubmit(event)"><input type="hidden" id="modal-category-id"><input type="text" id="category-modal-name" required class="w-full px-3 py-2 border rounded-lg text-sm"><div class="flex gap-2"><button type="button" onclick="hideCategoryModal()" class="flex-1 py-2 border rounded-lg text-sm">ยกเลิก</button><button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm">บันทึก</button></div></form></div></div>
   <div id="branch-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[210]"><div class="bg-white rounded-xl w-full max-w-sm"><div class="p-4 border-b font-bold text-slate-700">สาขา</div><form id="branch-form" class="p-4 space-y-4" onsubmit="handleBranchSubmit(event)"><input type="hidden" id="modal-branch-id"><input type="text" id="branch-modal-name" required class="w-full px-3 py-2 border rounded-lg mb-2 text-sm"><input type="text" id="branch-modal-loc" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="สถานที่"><div class="flex gap-2 mt-2"><button type="button" onclick="hideBranchModal()" class="flex-1 py-2 border rounded-lg text-sm">ยกเลิก</button><button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm">บันทึก</button></div></form></div></div>
@@ -507,9 +480,6 @@
   <div id="user-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-[220]"><div class="bg-white rounded-2xl w-full max-w-md"><div class="p-6 bg-indigo-900 text-white flex justify-between items-center"><h3 class="font-bold">ผู้ใช้งาน</h3><button onclick="hideUserModal()" class="text-white/60">✕</button></div><form id="user-form" class="p-6 space-y-4" onsubmit="handleUserSubmit(event)"><input type="hidden" id="modal-user-username-old"><div><label class="block text-xs font-bold text-slate-500 mb-1">Username</label><input type="text" id="user-modal-username" required class="w-full px-3 py-2 border rounded-lg text-sm"></div><div><label class="block text-xs font-bold text-slate-500 mb-1">Password</label><input type="password" id="user-modal-password" required class="w-full px-3 py-2 border rounded-lg text-sm"></div><div><label class="block text-xs font-bold text-slate-500 mb-1">Role</label><select id="user-modal-role" class="w-full px-3 py-2 border rounded-lg text-sm"><option value="STAFF">STAFF</option><option value="ADMIN">ADMIN</option></select></div><div class="flex gap-3"><button type="button" onclick="hideUserModal()" class="flex-1 py-2 border rounded-lg text-sm font-bold">ยกเลิก</button><button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold">บันทึก</button></div></form></div></div>
 
   <script>
-    // ==========================================
-    // 🎨 MODERN DIALOG & TOAST SYSTEM
-    // ==========================================
     const Dialog = {
       show: (options) => {
         return new Promise((resolve) => {
@@ -521,13 +491,13 @@
           const btnContainer = document.getElementById('custom-dialog-buttons');
 
           titleEl.innerText = options.title || 'แจ้งเตือน';
-          
+
           if (options.type === 'prompt') {
              messageEl.innerHTML = `<p class="mb-3">${options.message}</p><input type="text" id="custom-dialog-input" class="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm text-center" value="${options.defaultValue || ''}">`;
           } else {
              messageEl.innerHTML = options.message || '';
           }
-          
+
           let icon = 'ℹ️';
           if(options.type === 'error') icon = '❌';
           if(options.type === 'success') icon = '✅';
@@ -556,7 +526,7 @@
             const confirmBtn = document.createElement('button');
             confirmBtn.className = `px-5 py-2.5 rounded-xl font-bold text-white transition flex-1 shadow-lg ${options.confirmColor || 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'}`;
             if(options.type === 'confirm' && !options.confirmColor) confirmBtn.className = 'px-5 py-2.5 rounded-xl font-bold text-white transition flex-1 shadow-lg bg-red-500 hover:bg-red-600 shadow-red-200';
-            
+
             confirmBtn.innerText = options.confirmText || 'ตกลง';
             confirmBtn.onclick = () => {
                if(options.type === 'prompt') {
@@ -578,11 +548,10 @@
 
           dialog.classList.remove('hidden');
           dialog.classList.add('flex');
-          // trigger reflow
           void dialog.offsetWidth;
           dialog.classList.add('opacity-100');
           panel.classList.add('scale-100');
-          
+
           if(options.type === 'prompt') {
              setTimeout(() => {
                 const inp = document.getElementById('custom-dialog-input');
@@ -600,7 +569,7 @@
       show: (message, type = 'success') => {
         const container = document.getElementById('custom-toast-container');
         const toast = document.createElement('div');
-        
+
         let bgColor = 'bg-slate-800';
         let icon = '✅';
         if(type === 'error') { bgColor = 'bg-red-600'; icon = '❌'; }
@@ -609,9 +578,9 @@
 
         toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform transition-all duration-300 translate-x-full opacity-0 pointer-events-auto`;
         toast.innerHTML = `<span>${icon}</span><span class="text-sm font-bold">${message}</span>`;
-        
+
         container.appendChild(toast);
-        
+
         requestAnimationFrame(() => {
           toast.classList.remove('translate-x-full', 'opacity-0');
         });
@@ -623,10 +592,7 @@
       }
     };
 
-    // ==========================================
-    // ⚙️ GOOGLE SHEETS INTEGRATION & INITIAL STORE
-    // ==========================================
-    let GAS_URL = localStorage.getItem('ASSET_PRO_GAS_URL') || 'https://script.google.com/macros/s/AKfycbzuUj31QctoheW3SBc14y0KhQG39M04sKBmqYroqtzaBubmEAKboK4yBpypIjtmxhuh/exec';
+    let GAS_URL = localStorage.getItem('ASSET_PRO_GAS_URL') || 'https://script.google.com/macros/s/AKfycbw97JwSKBU3NIPzGm72rCvnRXE5_B94ziOpDx9-WGUl2odSlkUVIpHOBrQlbn1yuMkf/exec';
 
     let store = {
       currentUser: null,
@@ -640,7 +606,6 @@
       assets: [{ id: 1, assetNo: 'AS-0001', name: 'Sample Laptop', tags: ['laptop'], categoryId: 1, employeeId: 1, price: 30000, purchaseDate: '2023-05-15', status: 'Active', imageUrl: '', spec: { cpu: 'Intel' }, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), updatedBy: 'SYSTEM', history: [] }]
     };
 
-    // Helper functions สำหรับแปลงและแสดงผลสถานะ
     function getStatusDisplay(status) {
       const map = { 'Active': 'ปกติ', 'Available': 'ว่าง', 'Broken': 'ชำรุด', 'Maintenance': 'ซ่อม' };
       return map[status] || status;
@@ -667,9 +632,8 @@
         const res = await fetch(GAS_URL + "?action=load");
         if (!res.ok) throw new Error("Network response was not ok");
         const data = await res.json();
-        
+
         if (data && data.assets) {
-          // ✅ ดึงวันที่ซื้อที่ถูกซ่อนไว้ใน spec กลับมาอัตโนมัติ (เผื่อ Google Sheets ไม่รู้จักคอลัมน์วันที่ซื้อ)
           data.assets.forEach(a => {
             if (!a.purchaseDate && a.spec && a.spec.__purchaseDate) {
               a.purchaseDate = a.spec.__purchaseDate;
@@ -779,8 +743,7 @@
       });
       return Object.keys(obj).length ? obj : null;
     }
-    
-    // ซ่อนคีย์ __purchaseDate ออกจากหน้าจอ Spec ไม่ให้ผู้ใช้เห็น
+
     function specToText(spec) {
       if (!spec || typeof spec !== "object") return "";
       return Object.entries(spec)
@@ -791,20 +754,19 @@
     function nowISO() { return new Date().toISOString(); }
     function formatDateTime(iso) { return !iso || isNaN(new Date(iso)) ? '—' : new Date(iso).toLocaleString('th-TH', { year:'numeric', month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' }); }
     function currentUserName() { return store.currentUser?.name || 'SYSTEM'; }
-    
+
     function ensureAssetAudit(a) {
       a.createdAt = a.createdAt || nowISO();
       a.updatedAt = a.updatedAt || a.createdAt;
       a.updatedBy = a.updatedBy || 'SYSTEM';
       a.history = a.history || [];
       if (!a.history.length) a.history.push({ ts: a.createdAt, type:'CREATE', by: a.updatedBy, note:'สร้างรายการ' });
-      
-      // ฟื้นฟูวันที่ในกรณีฉุกเฉิน
+
       if (!a.purchaseDate && a.spec && a.spec.__purchaseDate) {
         a.purchaseDate = a.spec.__purchaseDate;
       }
     }
-    
+
     function logAssetEvent(assetId, evt) {
       const a = store.assets.find(x => x.id === assetId); if (!a) return; ensureAssetAudit(a);
       const event = { ts: evt.ts || nowISO(), type: evt.type || 'UPDATE', by: evt.by || currentUserName(), from: evt.from ?? null, to: evt.to ?? null, note: evt.note || '' };
@@ -820,14 +782,12 @@
       const p = document.getElementById('login-password').value;
 
       const found = store.users.find(x => String(x.username).toLowerCase() === u && String(x.password) === p);
-      
-      // Animation Effect
+
       const btnText = document.getElementById('login-btn-text');
       const spinner = document.getElementById('login-spinner');
       btnText.classList.add('hidden');
       spinner.classList.remove('hidden');
 
-      // Simulate loading delay for premium feel
       await new Promise(r => setTimeout(r, 800));
 
       btnText.classList.remove('hidden');
@@ -876,7 +836,7 @@
 
     function showSection(id) {
       if (id === "users" && !isAdmin()) return Dialog.alert("เฉพาะ ADMIN เท่านั้นที่จะเข้าดูหน้านี้ได้", "ไม่มีสิทธิ์", "error");
-      document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+      document.querySelectorAll('main section').forEach(s => s.classList.add('hidden'));
       document.getElementById(`section-${id}`).classList.remove('hidden');
       document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
       const nav = document.getElementById(`nav-${id}`); if (nav) nav.classList.add('active');
@@ -896,19 +856,16 @@
         `<div onclick="filterByCategory('${c.id}')" class="category-chip px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap ${store.selectedCategoryFilter == c.id ? 'active' : 'bg-white text-slate-600'}">${c.name}</div>`
       ).join('');
     }
-    function filterByCategory(id) { 
-      store.selectedCategoryFilter = id; 
-      currentAssetPage = 1; // Reset page on filter
-      renderCategoryFilter(); 
-      renderAssetTable(); 
+    function filterByCategory(id) {
+      store.selectedCategoryFilter = id;
+      currentAssetPage = 1;
+      renderCategoryFilter();
+      renderAssetTable();
     }
 
-    // ==========================================
-    // 🔍 ฟังก์ชันสำหรับการค้นหาสินทรัพย์
-    // ==========================================
     function handleAssetSearch(val) {
       store.assetSearchQuery = val;
-      currentAssetPage = 1; // Reset page on search
+      currentAssetPage = 1;
       renderAssetTable();
     }
 
@@ -916,60 +873,83 @@
       const el = document.getElementById('asset-search-input');
       if (el) el.value = '';
       store.assetSearchQuery = '';
-      currentAssetPage = 1; // Reset page on clear
+      currentAssetPage = 1;
       renderAssetTable();
     }
 
-    // =======================
-    // ⬇️ Export to Excel (.xlsx) ด้วย SheetJS
-    // =======================
     function exportAssetsExcel() {
+      if (typeof XLSX === 'undefined') {
+        Dialog.alert("ระบบกำลังโหลดไลบรารี Excel หรือโหลดไม่สำเร็จ กรุณารีเฟรชหน้าจอ", "แจ้งเตือน", "warning");
+        return;
+      }
       if (!store.assets || store.assets.length === 0) {
         Dialog.alert("ไม่มีข้อมูลสำหรับ Export", "แจ้งเตือน", "warning");
         return;
       }
 
-      // เตรียมข้อมูลให้เป็น Array ของ Object เพื่อแปลงเป็นตาราง Excel
-      const exportData = store.assets.map(a => {
-        const cat = store.categories.find(c => c.id == a.categoryId)?.name || '';
-        const emp = store.employees.find(e => e.id == a.employeeId);
-        const empName = emp?.name || '';
-        const branch = store.branches.find(b => b.id == emp?.branchId)?.name || '';
-        const dept = store.departments.find(d => d.id == emp?.deptId)?.name || '';
-        const specStr = specToText(a.spec).replace(/\n/g, " | ");
+      Toast.show("กำลังเตรียมไฟล์ Excel...", "info");
 
-        return {
-          "ทะเบียน": a.assetNo || '',
-          "ชื่อสินทรัพย์": a.name || '',
-          "ประเภท": cat,
-          "ผู้ถือครอง": empName,
-          "สาขา": branch,
-          "แผนก": dept,
-          "สถานะ": getStatusDisplay(a.status),
-          "ราคา": a.price || 0,
-          "วันที่ซื้อ": a.purchaseDate || '',
-          "รายละเอียดสเปก": specStr,
-          "URL รูปภาพ": a.imageUrl || '' // เพิ่มคอลัมน์ URL รูปภาพ
-        };
-      });
+      setTimeout(() => {
+        try {
+          const exportData = store.assets.map(a => {
+            const cat = store.categories.find(c => c.id == a.categoryId);
+            const emp = store.employees.find(e => e.id == a.employeeId);
+            const branch = store.branches.find(b => b.id == emp?.branchId);
+            const dept = store.departments.find(d => d.id == emp?.deptId);
+            const specStr = specToText(a.spec) || '';
 
-      // สร้าง Worksheet จากข้อมูล
-      const worksheet = XLSX.utils.json_to_sheet(exportData);
-      
-      // ปรับความกว้างคอลัมน์อัตโนมัติ (คร่าวๆ)
-      const wscols = [
-        {wch: 15}, {wch: 30}, {wch: 15}, {wch: 20}, {wch: 15}, 
-        {wch: 15}, {wch: 10}, {wch: 12}, {wch: 15}, {wch: 50},
-        {wch: 50} // ความกว้างสำหรับคอลัมน์ URL รูปภาพ
-      ];
-      worksheet['!cols'] = wscols;
+            let exportImageUrl = a.imageUrl || '';
+            if (exportImageUrl.startsWith('data:image/')) {
+              exportImageUrl = '[ข้อมูลรูปภาพเก่า (Base64) กรุณาลบและอัปโหลดใหม่]';
+            }
 
-      // สร้าง Workbook
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Assets Data");
+            return {
+              "ทะเบียน": a.assetNo || '',
+              "ชื่อสินทรัพย์": a.name || '',
+              "ประเภท": cat ? cat.name : '',
+              "ผู้ถือครอง": emp ? emp.name : '',
+              "สาขา": branch ? branch.name : '',
+              "แผนก": dept ? dept.name : '',
+              "สถานะ": getStatusDisplay(a.status),
+              "ราคา": Number(a.price) || 0,
+              "วันที่ซื้อ": a.purchaseDate || '',
+              "รายละเอียดสเปก": specStr.replace(/\n/g, " | "),
+              "URL รูปภาพ": exportImageUrl
+            };
+          });
 
-      // ดาวน์โหลดไฟล์ .xlsx
-      XLSX.writeFile(workbook, `assets-export-${new Date().toISOString().slice(0, 10)}.xlsx`);
+          const worksheet = XLSX.utils.json_to_sheet(exportData);
+          const wscols = [
+            {wch: 15}, {wch: 30}, {wch: 15}, {wch: 20}, {wch: 15},
+            {wch: 15}, {wch: 10}, {wch: 12}, {wch: 15}, {wch: 50},
+            {wch: 50}
+          ];
+          worksheet['!cols'] = wscols;
+
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, worksheet, "Assets Data");
+
+          const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+          const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const url = window.URL.createObjectURL(blob);
+
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `assets-export-${new Date().toISOString().slice(0, 10)}.xlsx`;
+          document.body.appendChild(a);
+          a.click();
+
+          setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }, 100);
+
+          Toast.show("Export ไฟล์สำเร็จ", "success");
+        } catch(e) {
+          console.error("Export Error:", e);
+          Dialog.alert("<b>ติดข้อจำกัดของระบบ Preview</b><br>กรุณาเซฟโค้ดนี้เป็นไฟล์ `.html` แล้วนำไปเปิดบนเบราว์เซอร์ของคุณโดยตรง", "ไม่สามารถดาวน์โหลดได้", "warning");
+        }
+      }, 500);
     }
 
     function triggerImportAssets() {
@@ -977,26 +957,18 @@
       if (el) el.click();
     }
 
-    // =======================
-    // ⬆️ Import from Excel (.xlsx) ด้วย SheetJS
-    // =======================
     function importAssetsExcel(event) {
       const file = event?.target?.files?.[0];
       if (!file) return;
 
       const reader = new FileReader();
-      
+
       reader.onload = (e) => {
         try {
-          // อ่านไฟล์แบบ ArrayBuffer สำหรับไลบรารี xlsx
           const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, { type: 'array' });
-          
-          // ดึง Sheet แรกมาใช้
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
-          
-          // แปลงข้อมูล Sheet เป็น JSON Array
           const rawData = XLSX.utils.sheet_to_json(worksheet);
 
           if (!rawData || rawData.length === 0) {
@@ -1007,7 +979,6 @@
           let addedCount = 0;
           let updatedCount = 0;
 
-          // กลับสถานะภาษาไทยให้เป็นตัวแปรระบบตอน Import
           const reverseStatusMap = {
             'ปกติ': 'Active',
             'ว่าง': 'Available',
@@ -1015,26 +986,22 @@
             'ซ่อม': 'Maintenance'
           };
 
-          // วนลูปอ่านข้อมูลทีละบรรทัด
           rawData.forEach(row => {
             const rowAssetNo = (row["ทะเบียน"] || "").toString().trim().toUpperCase();
-            if (!rowAssetNo && !row["ชื่อสินทรัพย์"]) return; // ข้ามบรรทัดที่ว่างจริงๆ
+            if (!rowAssetNo && !row["ชื่อสินทรัพย์"]) return;
 
-            // ค้นหา Category ID จากชื่อ
             let catId = store.categories?.[0]?.id ?? 1;
             if (row["ประเภท"]) {
               const foundCat = store.categories.find(c => c.name.trim() === row["ประเภท"].trim());
               if (foundCat) catId = foundCat.id;
             }
 
-            // ค้นหา Employee ID จากชื่อ
             let empId = null;
             if (row["ผู้ถือครอง"]) {
               const foundEmp = store.employees.find(emp => emp.name.trim() === row["ผู้ถือครอง"].trim());
               if (foundEmp) empId = foundEmp.id;
             }
 
-            // แปลง Text Spec กลับเป็น Object (หากมีข้อมูล)
             let specObj = null;
             if (row["รายละเอียดสเปก"]) {
               const parts = row["รายละเอียดสเปก"].split('|').map(s => s.trim()).filter(Boolean);
@@ -1050,103 +1017,98 @@
             const rawStatus = (row["สถานะ"] || "Active").trim();
             const mappedStatus = reverseStatusMap[rawStatus] || rawStatus;
 
-            // ตรวจสอบว่ามี "เลขทะเบียน" นี้ในระบบแล้วหรือไม่
             const existingAssetIndex = store.assets.findIndex(a => a.assetNo.toUpperCase() === rowAssetNo);
 
             if (existingAssetIndex >= 0 && rowAssetNo !== "") {
-               // ---------- กรณีมีอยู่แล้ว: ให้อัปเดตข้อมูล ----------
-               const existing = store.assets[existingAssetIndex];
-               existing.name = row["ชื่อสินทรัพย์"] || existing.name;
-               existing.categoryId = catId;
-               existing.employeeId = empId;
-               existing.status = mappedStatus;
-               existing.price = Number(row["ราคา"] || existing.price);
-               
-               if (row["วันที่ซื้อ"] !== undefined) {
-                 existing.purchaseDate = row["วันที่ซื้อ"]; 
-               }
+              const existing = store.assets[existingAssetIndex];
+              existing.name = row["ชื่อสินทรัพย์"] || existing.name;
+              existing.categoryId = catId;
+              existing.employeeId = empId;
+              existing.status = mappedStatus;
+              existing.price = Number(row["ราคา"] || existing.price);
 
-               if (row["URL รูปภาพ"] !== undefined) {
-                 existing.imageUrl = row["URL รูปภาพ"]; 
-               }
-               
-               if (specObj) existing.spec = specObj;
-               
-               // ✅ แบ็คอัพวันที่เก็บลง Spec ป้องกันข้อมูลหายเวลา Sync กับ Sheets
-               if (!existing.spec) existing.spec = {};
-               existing.spec.__purchaseDate = existing.purchaseDate || '';
-               
-               existing.updatedAt = nowISO();
-               existing.updatedBy = currentUserName();
-               
-               // บันทึกประวัติการแก้ไข
-               if (!existing.history) existing.history = [];
-               existing.history.unshift({ ts: existing.updatedAt, type: 'UPDATE', by: existing.updatedBy, note: 'อัปเดตข้อมูลจากการ Import Excel' });
-               
-               updatedCount++;
+              if (row["วันที่ซื้อ"] !== undefined) {
+                existing.purchaseDate = row["วันที่ซื้อ"];
+              }
+
+              if (row["URL รูปภาพ"] !== undefined && !String(row["URL รูปภาพ"]).includes("รูปภาพเก่า")) {
+                existing.imageUrl = row["URL รูปภาพ"];
+              }
+
+              if (specObj) existing.spec = specObj;
+
+              if (!existing.spec) existing.spec = {};
+              existing.spec.__purchaseDate = existing.purchaseDate || '';
+
+              existing.updatedAt = nowISO();
+              existing.updatedBy = currentUserName();
+
+              if (!existing.history) existing.history = [];
+              existing.history.unshift({ ts: existing.updatedAt, type: 'UPDATE', by: existing.updatedBy, note: 'อัปเดตข้อมูลจากการ Import Excel' });
+
+              updatedCount++;
             } else {
-               // ---------- กรณีไม่มี: ให้เพิ่มข้อมูลใหม่ ----------
-               const newAsset = {
-                 id: Date.now() + Math.floor(Math.random() * 100000), // สุ่ม ID
-                 assetNo: rowAssetNo || getNextAssetNo(), // ถ้าไม่มีทะเบียนสร้างให้ใหม่
-                 name: row["ชื่อสินทรัพย์"] || "Unnamed Asset",
-                 categoryId: catId,
-                 employeeId: empId,
-                 status: mappedStatus,
-                 price: Number(row["ราคา"] || 0),
-                 purchaseDate: row["วันที่ซื้อ"] || "",
-                 spec: specObj || {},
-                 tags: [], 
-                 imageUrl: row["URL รูปภาพ"] || "", // ดึงค่า URL รูปภาพจากการ Import
-                 createdAt: nowISO(),
-                 updatedAt: nowISO(),
-                 updatedBy: currentUserName(),
-                 history: []
-               };
-               
-               // ✅ แบ็คอัพวันที่เก็บลง Spec ป้องกันข้อมูลหาย
-               newAsset.spec.__purchaseDate = newAsset.purchaseDate;
-               
-               ensureAssetAudit(newAsset);
-               store.assets.push(newAsset);
-               addedCount++;
+              const newAsset = {
+                id: Date.now() + Math.floor(Math.random() * 100000),
+                assetNo: rowAssetNo || getNextAssetNo(),
+                name: row["ชื่อสินทรัพย์"] || "Unnamed Asset",
+                categoryId: catId,
+                employeeId: empId,
+                status: mappedStatus,
+                price: Number(row["ราคา"] || 0),
+                purchaseDate: row["วันที่ซื้อ"] || "",
+                spec: specObj || {},
+                tags: [],
+                imageUrl: row["URL รูปภาพ"] && !String(row["URL รูปภาพ"]).includes("รูปภาพเก่า") ? row["URL รูปภาพ"] : "",
+                createdAt: nowISO(),
+                updatedAt: nowISO(),
+                updatedBy: currentUserName(),
+                history: []
+              };
+
+              newAsset.spec.__purchaseDate = newAsset.purchaseDate;
+
+              ensureAssetAudit(newAsset);
+              store.assets.push(newAsset);
+              addedCount++;
             }
           });
 
-          // อัปเดต UI และบันทึกลง Database
           setupUI();
           saveStoreToGAS();
-          
+
           Dialog.alert(`<b>Import ไฟล์ Excel สำเร็จ!</b><br>- เพิ่มรายการใหม่: ${addedCount} รายการ<br>- อัปเดตข้อมูลเดิม: ${updatedCount} รายการ`, "สำเร็จ", "success");
 
         } catch (err) {
           console.error(err);
           Dialog.alert("ไม่สามารถอ่านไฟล์ Excel ได้ กรุณาตรวจสอบให้แน่ใจว่าเป็นไฟล์ .xlsx", "Import ล้มเหลว", "error");
         } finally {
-          event.target.value = ""; // รีเซ็ต input file
+          event.target.value = "";
         }
       };
-      
-      // สั่งให้อ่านไฟล์เป็น ArrayBuffer
+
       reader.readAsArrayBuffer(file);
     }
 
-    // ==========================================
-    // 📸 ฟังก์ชันบีบอัดและอัปโหลดรูปภาพแบบ Base64
-    // ==========================================
     function handleImageUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
+
+      const IMGBB_API_KEY = '66d6f97c0bfacc5f0342a40df7fcc3f8';
+
+      const submitBtn = document.getElementById('asset-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '⏳ กำลังเตรียมรูป...';
+      submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
       const reader = new FileReader();
       reader.onload = function(e) {
         const img = new Image();
         img.onload = function() {
           const canvas = document.createElement('canvas');
-          
-          // กำหนดขนาดสูงสุดเพื่อไม่ให้ Base64 ใหญ่เกินไป (เหมาะกับ Google Sheets)
-          const MAX_WIDTH = 400;
-          const MAX_HEIGHT = 400;
+
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
           let width = img.width;
           let height = img.height;
 
@@ -1167,54 +1129,106 @@
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          // แปลงเป็น Base64 แบบ JPEG พร้อมลดคุณภาพ 50% ให้ไฟล์เล็กที่สุด
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
-
-          // นำ Base64 ไปใส่ในช่อง URL Input และแสดง Preview
-          document.getElementById('modal-image-url').value = dataUrl;
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
           updatePreview(dataUrl);
+
+          Toast.show("⏳ กำลังแปลงเป็นลิงก์เซิร์ฟเวอร์ ImgBB...", "info");
+          submitBtn.innerHTML = '⏳ กำลังอัปโหลดลิงก์...';
+
+          const base64Data = dataUrl.split(',')[1];
+          const formData = new FormData();
+          formData.append('image', base64Data);
+
+          fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: 'POST',
+            body: formData
+          })
+          .then(response => response.json())
+          .then(result => {
+            if(result.success) {
+              const uploadedUrl = result.data.url;
+              document.getElementById('modal-image-url').value = uploadedUrl;
+              Toast.show("✅ แปลงรูปเป็นลิงก์สำเร็จ! กดบันทึกได้เลย", "success");
+            } else {
+              throw new Error(result.error?.message || "เซิร์ฟเวอร์ฝากรูปไม่ตอบสนอง");
+            }
+          })
+          .catch(error => {
+            console.error("Upload Error:", error);
+            Dialog.alert("อัปโหลดรูปไม่สำเร็จ กรุณาลองถ่ายใหม่อีกครั้ง", "ข้อผิดพลาด", "error");
+            document.getElementById('modal-image-url').value = '';
+            updatePreview('');
+          })
+          .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'บันทึก';
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            event.target.value = '';
+          });
         }
         img.src = e.target.result;
       }
       reader.readAsDataURL(file);
     }
 
-    // =======================
-    // ⬇️ Export Employees to Excel (.xlsx) ด้วย SheetJS
-    // =======================
     function exportEmployeesExcel() {
+      if (typeof XLSX === 'undefined') {
+        Dialog.alert("ระบบกำลังโหลดไลบรารี Excel หรือโหลดไม่สำเร็จ กรุณารีเฟรชหน้าจอ", "แจ้งเตือน", "warning");
+        return;
+      }
       if (!store.employees || store.employees.length === 0) {
         Dialog.alert("ไม่มีข้อมูลสำหรับ Export", "แจ้งเตือน", "warning");
         return;
       }
 
-      const exportData = store.employees.map(e => {
-        const branch = store.branches.find(b => b.id == e.branchId)?.name || '';
-        const dept = store.departments.find(d => d.id == e.deptId)?.name || '';
+      Toast.show("กำลังเตรียมไฟล์ Excel...", "info");
 
-        return {
-          "ชื่อ": e.name || '',
-          "ตำแหน่ง": e.position || '',
-          "สาขา": branch,
-          "แผนก": dept
-        };
-      });
+      setTimeout(() => {
+        try {
+          const exportData = store.employees.map(e => {
+            const branch = store.branches.find(b => b.id == e.branchId);
+            const dept = store.departments.find(d => d.id == e.deptId);
 
-      const worksheet = XLSX.utils.json_to_sheet(exportData);
-      const wscols = [
-        {wch: 30}, {wch: 30}, {wch: 20}, {wch: 20}
-      ];
-      worksheet['!cols'] = wscols;
+            return {
+              "ชื่อ": e.name || '',
+              "ตำแหน่ง": e.position || '',
+              "สาขา": branch ? branch.name : '',
+              "แผนก": dept ? dept.name : ''
+            };
+          });
 
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Employees Data");
+          const worksheet = XLSX.utils.json_to_sheet(exportData);
+          const wscols = [
+            {wch: 30}, {wch: 30}, {wch: 20}, {wch: 20}
+          ];
+          worksheet['!cols'] = wscols;
 
-      XLSX.writeFile(workbook, `employees-export-${new Date().toISOString().slice(0, 10)}.xlsx`);
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, worksheet, "Employees Data");
+
+          const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+          const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const url = window.URL.createObjectURL(blob);
+
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `employees-export-${new Date().toISOString().slice(0, 10)}.xlsx`;
+          document.body.appendChild(a);
+          a.click();
+
+          setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }, 100);
+
+          Toast.show("Export ไฟล์สำเร็จ", "success");
+        } catch(e) {
+          console.error("Export Error:", e);
+          Dialog.alert("<b>ติดข้อจำกัดของระบบ Preview</b><br>กรุณาเซฟโค้ดนี้เป็นไฟล์ `.html` แล้วนำไปเปิดบนเบราว์เซอร์ของคุณโดยตรง", "ไม่สามารถดาวน์โหลดได้", "warning");
+        }
+      }, 500);
     }
 
-    // =======================
-    // ⬆️ Import Employees from Excel (.xlsx) ด้วย SheetJS
-    // =======================
     function triggerImportEmployees() {
       const el = document.getElementById("employee-import-file");
       if (el) el.click();
@@ -1225,7 +1239,7 @@
       if (!file) return;
 
       const reader = new FileReader();
-      
+
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target.result);
@@ -1244,16 +1258,14 @@
 
           rawData.forEach(row => {
             const empName = (row["ชื่อ"] || row["ชื่อพนักงาน"] || row["พนักงาน"] || "").toString().trim();
-            if (!empName) return; // ข้ามบรรทัดที่ไม่มีชื่อพนักงาน
+            if (!empName) return;
 
-            // ค้นหา Branch ID จากสาขา
             let bId = store.branches?.[0]?.id ?? 1;
             if (row["สาขา"]) {
               const foundB = store.branches.find(b => b.name.trim() === row["สาขา"].trim());
               if (foundB) bId = foundB.id;
             }
 
-            // ค้นหา Department ID จากแผนก
             let dId = store.departments?.[0]?.id ?? 1;
             if (row["แผนก"]) {
               const foundD = store.departments.find(d => d.name.trim() === row["แผนก"].trim());
@@ -1262,18 +1274,15 @@
 
             const pos = (row["ตำแหน่ง"] || "").toString().trim();
 
-            // ตรวจสอบว่ามีชื่อพนักงานนี้อยู่แล้วหรือไม่ (เพื่ออัปเดตแทนการสร้างซ้ำ)
             const existingIndex = store.employees.findIndex(emp => emp.name.toLowerCase() === empName.toLowerCase());
 
             if (existingIndex >= 0) {
-              // มีพนักงานคนนี้อยู่แล้ว -> อัปเดตข้อมูล
               const existing = store.employees[existingIndex];
               existing.position = pos || existing.position;
               existing.branchId = bId;
               existing.deptId = dId;
               updatedCount++;
             } else {
-              // ไม่มีพนักงานคนนี้ -> สร้างใหม่
               const newEmp = {
                 id: Date.now() + Math.floor(Math.random() * 100000),
                 name: empName,
@@ -1286,26 +1295,22 @@
             }
           });
 
-          // อัปเดต UI และบันทึกลง Database
           setupUI();
           saveStoreToGAS();
-          
+
           Dialog.alert(`<b>Import ไฟล์พนักงานสำเร็จ!</b><br>- เพิ่มใหม่: ${addedCount} คน<br>- อัปเดตเดิม: ${updatedCount} คน`, "สำเร็จ", "success");
 
         } catch (err) {
           console.error(err);
           Dialog.alert("กรุณาตรวจสอบให้แน่ใจว่าเป็นไฟล์ Excel ที่มีคอลัมน์ ชื่อ, ตำแหน่ง, สาขา, แผนก", "Import ล้มเหลว", "error");
         } finally {
-          event.target.value = ""; // รีเซ็ต input file
+          event.target.value = "";
         }
       };
-      
+
       reader.readAsArrayBuffer(file);
     }
 
-    // ==========================================
-    // 📄 ระบบ Pagination
-    // ==========================================
     let currentAssetPage = 1;
     let currentEmployeePage = 1;
     const ITEMS_PER_PAGE = 10;
@@ -1315,8 +1320,7 @@
       if (!container) return;
 
       const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
-      
-      // Ensure current page is valid
+
       if (currentPage > totalPages) currentPage = totalPages;
       if (currentPage < 1) currentPage = 1;
 
@@ -1358,7 +1362,6 @@
       renderEmployeeTable();
     }
 
-    // ✅ renderAssetTable: ค้นหาด้วยเลขทะเบียน และชื่อสินทรัพย์
     function renderAssetTable() {
       const tbody = document.getElementById('asset-table-body');
 
@@ -1368,26 +1371,22 @@
 
       const q = (store.assetSearchQuery || "").trim().toLowerCase();
       if (q) {
-        // อัปเดตให้ค้นหาได้ทั้ง "ทะเบียน" และ "ชื่อสินทรัพย์"
-        filtered = filtered.filter(a => 
+        filtered = filtered.filter(a =>
           String(a?.assetNo || "").toLowerCase().includes(q) ||
           String(a?.name || "").toLowerCase().includes(q)
         );
       }
 
-      // ✅ เรียงลำดับข้อมูลตาม "เลขทะเบียน" จากน้อยไปมาก (A-Z, 0-9)
       filtered.sort((a, b) => {
         const noA = String(a.assetNo || "").toUpperCase();
         const noB = String(b.assetNo || "").toUpperCase();
-        // ใช้ localeCompare แบบ numeric เพื่อให้เลขเรียงถูกต้อง (เช่น AS-2 มาก่อน AS-10)
         return noA.localeCompare(noB, undefined, { numeric: true, sensitivity: 'base' });
       });
 
-      // ตัดข้อมูลตาม Pagination
       const totalItems = filtered.length;
       const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
       if (currentAssetPage > totalPages) currentAssetPage = totalPages;
-      
+
       const startIndex = (currentAssetPage - 1) * ITEMS_PER_PAGE;
       const paginatedData = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
@@ -1402,7 +1401,7 @@
 
         return `<tr class="hover:bg-slate-50 transition cursor-pointer" onclick="viewAssetDetail(${a.id})">
           <td class="px-6 py-3">
-            <img src="${a.imageUrl}" class="asset-img" onerror="this.src='https://via.placeholder.com/50'">
+            <img src="${a.imageUrl || 'https://via.placeholder.com/50'}" class="asset-img" onerror="this.src='https://via.placeholder.com/50'">
           </td>
 
           <td class="px-6 py-3">
@@ -1437,11 +1436,18 @@
         </tr>`;
       }).join('') || '<tr><td colspan="7" class="p-8 text-center text-slate-400">ไม่มีข้อมูล</td></tr>';
 
-      // Render Pagination
       renderPaginationUI('asset-pagination-container', currentAssetPage, totalItems, 'changeAssetPage');
     }
 
-    async function deleteAsset(id) { if(!requireAdmin("ลบ")) return; if (await Dialog.confirm("คุณแน่ใจหรือไม่ที่จะลบสินทรัพย์นี้?", "ยืนยันการลบ")) { store.assets = (store.assets||[]).filter(a => a.id !== id); setupUI(); saveStoreToGAS(); Toast.show("ลบสินทรัพย์เรียบร้อย"); } }
+    async function deleteAsset(id) {
+      if(!requireAdmin("ลบ")) return;
+      if (await Dialog.confirm("คุณแน่ใจหรือไม่ที่จะลบสินทรัพย์นี้?", "ยืนยันการลบ")) {
+        store.assets = (store.assets||[]).filter(a => a.id !== id);
+        setupUI();
+        saveStoreToGAS();
+        Toast.show("ลบสินทรัพย์เรียบร้อย");
+      }
+    }
 
     let currentDetailAssetId = null;
     function viewAssetDetail(id) {
@@ -1453,8 +1459,7 @@
       document.getElementById('detail-category').innerText = cat?.name || 'ทั่วไป';
       document.getElementById('detail-employee').innerText = emp ? `👤 ${emp.name}` : '-';
       document.getElementById('detail-price').innerText = `ราคา: ${(a.price||0).toLocaleString()} ฿`;
-      
-      // จัดรูปแบบวันที่ก่อนแสดงผล
+
       let purchaseDateStr = '-';
       let safeDateStr = a.purchaseDate || (a.spec && a.spec.__purchaseDate ? a.spec.__purchaseDate : '');
       if (safeDateStr) {
@@ -1475,7 +1480,7 @@
 
       document.getElementById('detail-tags').innerHTML = (a.tags||[]).map(t => `<span class="tag">#${t}</span>`).join('');
       document.getElementById('detail-spec').innerHTML = specToText(a.spec).replace(/\n/g, '<br>') || 'ไม่มีข้อมูลสเปก';
-      
+
       document.getElementById('detail-status').className = `px-2 py-1 rounded text-xs font-bold ${getStatusColor(a.status)}`;
       document.getElementById('detail-status').innerText = getStatusDisplay(a.status);
 
@@ -1516,11 +1521,10 @@
       const tbody = document.getElementById('employee-table-body');
       let data = store.employees || [];
 
-      // ตัดข้อมูลตาม Pagination
       const totalItems = data.length;
       const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
       if (currentEmployeePage > totalPages) currentEmployeePage = totalPages;
-      
+
       const startIndex = (currentEmployeePage - 1) * ITEMS_PER_PAGE;
       const paginatedData = data.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
@@ -1541,9 +1545,9 @@
         </tr>`;
       }).join('') || '<tr><td colspan="4" class="p-8 text-center text-slate-400">ไม่มีข้อมูล</td></tr>';
 
-      // Render Pagination
       renderPaginationUI('employee-pagination-container', currentEmployeePage, totalItems, 'changeEmployeePage');
     }
+
     function renderCategoryList() { document.getElementById('category-list-container').innerHTML = (store.categories||[]).map(c => `<div class="p-4 flex justify-between group"><b>${c.name}</b><div class="opacity-0 group-hover:opacity-100"><button onclick="editCategory(${c.id})" class="text-blue-500 text-xs mr-2">แก้ไข</button>${isAdmin() ? `<button onclick="deleteCategory(${c.id})" class="text-red-400 text-xs">ลบ</button>` : ''}</div></div>`).join(''); }
     function renderBranchList() { document.getElementById('branch-list-container').innerHTML = (store.branches||[]).map(b => `<div class="p-4 flex justify-between group"><div><b>${b.name}</b><div class="text-xs">${b.location||'-'}</div></div><div class="opacity-0 group-hover:opacity-100"><button onclick="editBranch(${b.id})" class="text-blue-500 text-xs mr-2">แก้ไข</button>${isAdmin() ? `<button onclick="deleteBranch(${b.id})" class="text-red-400 text-xs">ลบ</button>` : ''}</div></div>`).join(''); }
     function renderDeptList() { document.getElementById('dept-list-container').innerHTML = (store.departments||[]).map(d => `<div class="p-4 flex justify-between group"><b>${d.name}</b><div class="opacity-0 group-hover:opacity-100"><button onclick="editDept(${d.id})" class="text-blue-500 text-xs mr-2">แก้ไข</button>${isAdmin() ? `<button onclick="deleteDept(${d.id})" class="text-red-400 text-xs">ลบ</button>` : ''}</div></div>`).join(''); }
@@ -1573,19 +1577,25 @@
     async function deleteEmployee(id) { if(!requireAdmin("ลบ")) return; if((store.assets||[]).some(a=>a.employeeId==id)) return Dialog.alert("พนักงานท่านนี้ยังถือครองสินทรัพย์อยู่", "แจ้งเตือน", "warning"); if(await Dialog.confirm("คุณต้องการลบพนักงานนี้ใช่หรือไม่?")) { store.employees = (store.employees||[]).filter(x=>x.id!=id); setupUI(); saveStoreToGAS(); Toast.show("ลบเรียบร้อย"); } }
     function handleEmployeeSubmit(e) { e.preventDefault(); const id = document.getElementById('modal-emp-id').value; const data = { id: id ? parseInt(id) : Date.now(), name: document.getElementById('emp-modal-name').value, position: document.getElementById('emp-modal-pos').value, branchId: parseInt(document.getElementById('emp-modal-branch').value), deptId: parseInt(document.getElementById('emp-modal-dept').value) }; if(id) store.employees[store.employees.findIndex(x=>x.id==id)] = data; else store.employees.push(data); hideEmployeeModal(); setupUI(); saveStoreToGAS(); Toast.show("บันทึกข้อมูลเรียบร้อย"); }
 
-    function showAssetModal() { 
-      document.getElementById('asset-form').reset(); 
-      document.getElementById('modal-asset-id').value = ''; 
-      document.getElementById('modal-spec').value = ''; 
-      document.getElementById('modal-purchase-date').value = ''; // Clear Date
-      document.getElementById('modal-assetno').value = getNextAssetNo(); 
-      updatePreview(''); 
-      document.getElementById('asset-modal').classList.remove('hidden'); 
+    function showAssetModal() {
+      document.getElementById('asset-form').reset();
+      document.getElementById('modal-asset-id').value = '';
+      document.getElementById('modal-spec').value = '';
+      document.getElementById('modal-purchase-date').value = '';
+      document.getElementById('modal-assetno').value = getNextAssetNo();
+      document.getElementById('modal-image-file').value = '';
+      document.getElementById('modal-image-camera').value = '';
+      updatePreview('');
+      document.getElementById('asset-modal').classList.remove('hidden');
+      document.getElementById('asset-modal').classList.add('flex');
     }
-    
-    function hideAssetModal() { document.getElementById('asset-modal').classList.add('hidden'); }
+
+    function hideAssetModal() {
+      document.getElementById('asset-modal').classList.add('hidden');
+      document.getElementById('asset-modal').classList.remove('flex');
+    }
     function updatePreview(url) { const img = document.getElementById('modal-image-preview'); if (url) { img.src = url; img.classList.remove('hidden'); } else img.classList.add('hidden'); }
-    
+
     function editAsset(id) {
       const a = store.assets.find(x=>x.id==id);
       document.getElementById('modal-asset-id').value = a.id;
@@ -1593,13 +1603,12 @@
       document.getElementById('modal-tags').value = tagsToString(a.tags);
       document.getElementById('modal-name').value = a.name;
       document.getElementById('modal-category').value = a.categoryId;
-      
+
       let pDate = a.purchaseDate || (a.spec && a.spec.__purchaseDate ? a.spec.__purchaseDate : '');
       if (pDate) {
         try {
           const d = new Date(pDate);
           if (!isNaN(d.getTime())) {
-            // ดึงค่า ปี-เดือน-วัน เพื่อให้ใช้กับ input type="date" ได้พอดี
             pDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
           }
         } catch(e) {}
@@ -1611,8 +1620,13 @@
       document.getElementById('modal-status').value = a.status;
       document.getElementById('modal-image-url').value = a.imageUrl;
       document.getElementById('modal-spec').value = specToText(a.spec);
+
+      document.getElementById('modal-image-file').value = '';
+      document.getElementById('modal-image-camera').value = '';
+
       updatePreview(a.imageUrl);
       document.getElementById('asset-modal').classList.remove('hidden');
+      document.getElementById('asset-modal').classList.add('flex');
     }
 
     function handleAssetSubmit(e) {
@@ -1627,7 +1641,7 @@
       let assetNo = document.getElementById('modal-assetno').value.trim().toUpperCase() || getNextAssetNo();
       if(isAssetNoDuplicate(assetNo, assetId)) return Dialog.alert("เลขทะเบียนนี้ถูกใช้งานแล้ว กรุณาเปลี่ยนใหม่", "ทะเบียนซ้ำ", "error");
 
-      const pd = document.getElementById('modal-purchase-date').value; // Save Date
+      const pd = document.getElementById('modal-purchase-date').value;
 
       const payload = {
         id: assetId ?? Date.now(),
@@ -1637,13 +1651,12 @@
         categoryId: parseInt(document.getElementById('modal-category').value),
         employeeId: document.getElementById('modal-employee').value ? parseInt(document.getElementById('modal-employee').value) : null,
         price: parseFloat(document.getElementById('modal-price').value),
-        purchaseDate: pd, 
+        purchaseDate: pd,
         status: document.getElementById('modal-status').value,
         imageUrl: document.getElementById('modal-image-url').value,
         spec: specObj || {}
       };
 
-      // ✅ แบ็คอัพวันที่เก็บลง Spec ป้องกันข้อมูลหายเวลา Sync กับ Sheets
       payload.spec.__purchaseDate = pd;
 
       const user = currentUserName(), ts = nowISO();
@@ -1665,9 +1678,9 @@
       hideAssetModal(); setupUI(); saveStoreToGAS(); Toast.show("บันทึกสินทรัพย์เรียบร้อย");
     }
 
-    function showUserModal() { if(!requireAdmin("จัดการผู้ใช้งาน")) return; document.getElementById('user-form').reset(); document.getElementById('modal-user-username-old').value = ''; document.getElementById('user-modal').classList.remove('hidden'); }
-    function hideUserModal() { document.getElementById('user-modal').classList.add('hidden'); }
-    function editUser(u) { if(!requireAdmin("แก้ไข")) return; const user = store.users.find(x=>x.username===u); document.getElementById('modal-user-username-old').value = user.username; document.getElementById('user-modal-username').value = user.username; document.getElementById('user-modal-password').value = user.password; document.getElementById('user-modal-role').value = user.role; document.getElementById('user-modal').classList.remove('hidden'); }
+    function showUserModal() { if(!requireAdmin("จัดการผู้ใช้งาน")) return; document.getElementById('user-form').reset(); document.getElementById('modal-user-username-old').value = ''; document.getElementById('user-modal').classList.remove('hidden'); document.getElementById('user-modal').classList.add('flex'); }
+    function hideUserModal() { document.getElementById('user-modal').classList.add('hidden'); document.getElementById('user-modal').classList.remove('flex'); }
+    function editUser(u) { if(!requireAdmin("แก้ไข")) return; const user = store.users.find(x=>x.username===u); document.getElementById('modal-user-username-old').value = user.username; document.getElementById('user-modal-username').value = user.username; document.getElementById('user-modal-password').value = user.password; document.getElementById('user-modal-role').value = user.role; document.getElementById('user-modal').classList.remove('hidden'); document.getElementById('user-modal').classList.add('flex'); }
     async function deleteUser(u) { if(!requireAdmin("ลบ")) return; if(store.currentUser.username === u) return Dialog.alert("ไม่สามารถลบตัวเองได้", "แจ้งเตือน", "error"); if(await Dialog.confirm(`คุณต้องการลบผู้ใช้ ${u} ใช่หรือไม่?`)) { store.users = store.users.filter(x=>x.username!==u); renderUserTable(); saveStoreToGAS(); Toast.show("ลบผู้ใช้เรียบร้อย"); } }
     function handleUserSubmit(e) { e.preventDefault(); const oldU = document.getElementById('modal-user-username-old').value, u = document.getElementById('user-modal-username').value.toLowerCase().trim(), p = document.getElementById('user-modal-password').value, r = document.getElementById('user-modal-role').value; if(store.users.some(x=>x.username===u && x.username!==oldU)) return Dialog.alert("ชื่อผู้ใช้งานนี้ถูกใช้ไปแล้ว", "ข้อมูลซ้ำ", "error"); if(oldU) store.users[store.users.findIndex(x=>x.username===oldU)] = {username:u, password:p, role:r}; else store.users.push({username:u, password:p, role:r}); hideUserModal(); renderUserTable(); saveStoreToGAS(); Toast.show("บันทึกผู้ใช้เรียบร้อย"); }
 
