@@ -30,7 +30,7 @@
     .animation-delay-4000 { animation-delay: 4s; }
 
     .asset-img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; background-color: #f1f5f9; }
-    .asset-img-large { width: 100%; height: 150px; object-fit: cover; border-radius: 12px; margin-bottom: 1rem; border: 1px solid #e2e8f0; }
+    .asset-img-large { width: 100%; height: 150px; object-fit: cover; border-radius: 12px; margin-bottom: 1rem; border: 1px solid #e2e8f0; background-color: #f1f5f9; }
     .scroll-hide::-webkit-scrollbar { display: none; }
     .category-chip { cursor: pointer; transition: all 0.2s; border: 1px solid #e2e8f0; }
     .category-chip.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
@@ -450,7 +450,7 @@
     <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
       <div class="p-6 bg-slate-900 text-white flex justify-between items-center sticky top-0"><h3 class="text-lg font-bold">รายละเอียด</h3><button onclick="hideAssetDetail()" class="text-white/60">✕</button></div>
       <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto">
-        <img id="detail-image" class="w-full h-56 object-cover rounded-xl border">
+        <img id="detail-image" class="w-full h-56 object-cover rounded-xl border bg-slate-100">
         <div class="space-y-3">
           <div id="detail-assetno" class="text-lg font-extrabold text-slate-800"></div>
           <div id="detail-name" class="text-xl font-extrabold text-slate-800"></div>
@@ -592,7 +592,24 @@
       }
     };
 
-    let GAS_URL = localStorage.getItem('ASSET_PRO_GAS_URL') || 'https://script.google.com/macros/s/AKfycbxQ16c0JrvDTgHJ7VQQEHoccfUUCb6bItcrqtVOqwkMbefxtcZ4PvYpTw8Y1D-6pmTs/exec';
+    // อัปเดต URL แล้ว (เพิ่ม /exec ต่อท้าย)
+    let GAS_URL = localStorage.getItem('ASSET_PRO_GAS_URL') || 'https://script.google.com/macros/s/AKfycbwYdrHo8TOM1eX04gb5TsEf1fBeswHvEQ7j1o9dlpeMEaf9QUBglaFdeQLDC9f7mIpF/exec';
+
+    // เพิ่มฟังก์ชันสำหรับแปลง Link ภาพของ Google Drive ให้แสดงผลได้
+    const FALLBACK_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
+
+    function getDisplayImageUrl(url) {
+      if (!url) return FALLBACK_IMG;
+      
+      // ถ้าเป็นลิงก์จาก Google Drive ให้แปลงเป็น thumbnail URL
+      if (url.includes('drive.google.com')) {
+        const match = url.match(/[?&]id=([^&]+)/) || url.match(/\/d\/([^/]+)/);
+        if (match && match[1]) {
+          return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
+        }
+      }
+      return url;
+    }
 
     let store = {
       currentUser: null,
@@ -1094,8 +1111,6 @@
       const file = event.target.files[0];
       if (!file) return;
 
-      const IMGBB_API_KEY = '66d6f97c0bfacc5f0342a40df7fcc3f8';
-
       const submitBtn = document.getElementById('asset-submit-btn');
       submitBtn.disabled = true;
       submitBtn.innerHTML = '⏳ กำลังเตรียมรูป...';
@@ -1132,30 +1147,44 @@
           const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
           updatePreview(dataUrl);
 
-          Toast.show("⏳ กำลังแปลงเป็นลิงก์เซิร์ฟเวอร์ ImgBB...", "info");
-          submitBtn.innerHTML = '⏳ กำลังอัปโหลดลิงก์...';
+          Toast.show("⏳ กำลังส่งรูปไปยัง Google Drive...", "info");
+          submitBtn.innerHTML = '⏳ กำลังอัปโหลด...';
 
           const base64Data = dataUrl.split(',')[1];
-          const formData = new FormData();
-          formData.append('image', base64Data);
+          
+          // ตรวจสอบว่าเชื่อมต่อ Web App URL แล้วหรือยัง
+          if (!GAS_URL) {
+            Dialog.alert("กรุณาเชื่อมต่อ Google Sheets Backend ก่อนอัปโหลดรูปภาพ", "ข้อผิดพลาด", "error");
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'บันทึก';
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            return;
+          }
 
-          fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+          // ส่งข้อมูลไปที่ Google Apps Script ของเราแทน ImgBB
+          fetch(GAS_URL, {
             method: 'POST',
-            body: formData
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({
+              action: 'uploadImage',
+              base64: base64Data,
+              mimeType: 'image/jpeg',
+              filename: 'asset_' + Date.now() + '.jpg'
+            })
           })
           .then(response => response.json())
           .then(result => {
             if(result.success) {
-              const uploadedUrl = result.data.url;
+              const uploadedUrl = result.url;
               document.getElementById('modal-image-url').value = uploadedUrl;
-              Toast.show("✅ แปลงรูปเป็นลิงก์สำเร็จ! กดบันทึกได้เลย", "success");
+              Toast.show("✅ อัปโหลดรูปลง Google Drive สำเร็จ! กดบันทึกได้เลย", "success");
             } else {
-              throw new Error(result.error?.message || "เซิร์ฟเวอร์ฝากรูปไม่ตอบสนอง");
+              throw new Error(result.error || "เกิดข้อผิดพลาดจากฝั่งเซิร์ฟเวอร์");
             }
           })
           .catch(error => {
             console.error("Upload Error:", error);
-            Dialog.alert("อัปโหลดรูปไม่สำเร็จ กรุณาลองถ่ายใหม่อีกครั้ง", "ข้อผิดพลาด", "error");
+            Dialog.alert("อัปโหลดรูปไม่สำเร็จ: " + error.message, "ข้อผิดพลาด", "error");
             document.getElementById('modal-image-url').value = '';
             updatePreview('');
           })
@@ -1401,7 +1430,7 @@
 
         return `<tr class="hover:bg-slate-50 transition cursor-pointer" onclick="viewAssetDetail(${a.id})">
           <td class="px-6 py-3">
-            <img src="${a.imageUrl || 'https://via.placeholder.com/50'}" class="asset-img" onerror="this.src='https://via.placeholder.com/50'">
+            <img src="${getDisplayImageUrl(a.imageUrl)}" class="asset-img" onerror="this.src='${FALLBACK_IMG}'">
           </td>
 
           <td class="px-6 py-3">
@@ -1442,10 +1471,38 @@
     async function deleteAsset(id) {
       if(!requireAdmin("ลบ")) return;
       if (await Dialog.confirm("คุณแน่ใจหรือไม่ที่จะลบสินทรัพย์นี้?", "ยืนยันการลบ")) {
+        // ค้นหาข้อมูลสินทรัพย์ก่อนลบเพื่อดึง URL รูปภาพ
+        const assetToDelete = store.assets.find(a => a.id === id);
+
+        // ลบออกจากสถานะ (State)
         store.assets = (store.assets||[]).filter(a => a.id !== id);
         setupUI();
         saveStoreToGAS();
-        Toast.show("ลบสินทรัพย์เรียบร้อย");
+        
+        // หากมีรูปภาพ ให้ทำการดึง fileId จาก URL และส่งคำสั่งลบไปที่ backend
+        if (assetToDelete && assetToDelete.imageUrl && GAS_URL) {
+          const url = assetToDelete.imageUrl;
+          let fileId = null;
+          
+          // ตรวจสอบโครงสร้างของ URL (รองรับแบบ ?id= และ /d/)
+          const match = url.match(/[?&]id=([^&]+)/) || url.match(/\/d\/([^/]+)/);
+          
+          if (match && match[1]) {
+            fileId = match[1];
+            
+            // ส่งคำขอให้ลบรูปไปที่ GAS
+            fetch(GAS_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain' },
+              body: JSON.stringify({
+                action: 'deleteImage',
+                fileId: fileId
+              })
+            }).catch(e => console.error("Error deleting image:", e));
+          }
+        }
+
+        Toast.show("ลบสินทรัพย์เรียบร้อยแล้ว");
       }
     }
 
@@ -1475,8 +1532,8 @@
       document.getElementById('detail-purchase-date').innerHTML = `<b>วันที่ซื้อ:</b> ${purchaseDateStr}`;
 
       const img = document.getElementById('detail-image');
-      img.src = a.imageUrl || 'https://via.placeholder.com/600x300';
-      img.onerror = () => (img.src = 'https://via.placeholder.com/600x300');
+      img.src = getDisplayImageUrl(a.imageUrl);
+      img.onerror = () => (img.src = FALLBACK_IMG);
 
       document.getElementById('detail-tags').innerHTML = (a.tags||[]).map(t => `<span class="tag">#${t}</span>`).join('');
       document.getElementById('detail-spec').innerHTML = specToText(a.spec).replace(/\n/g, '<br>') || 'ไม่มีข้อมูลสเปก';
@@ -1594,7 +1651,17 @@
       document.getElementById('asset-modal').classList.add('hidden');
       document.getElementById('asset-modal').classList.remove('flex');
     }
-    function updatePreview(url) { const img = document.getElementById('modal-image-preview'); if (url) { img.src = url; img.classList.remove('hidden'); } else img.classList.add('hidden'); }
+    
+    function updatePreview(url) { 
+      const img = document.getElementById('modal-image-preview'); 
+      if (url) { 
+        img.src = getDisplayImageUrl(url); 
+        img.onerror = () => (img.src = FALLBACK_IMG);
+        img.classList.remove('hidden'); 
+      } else { 
+        img.classList.add('hidden'); 
+      } 
+    }
 
     function editAsset(id) {
       const a = store.assets.find(x=>x.id==id);
