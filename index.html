@@ -8,6 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -89,7 +90,48 @@
     <div class="text-sm font-bold tracking-wide">กำลังซิงค์ข้อมูลกับ Sheets...</div>
   </div>
 
-  <div id="login-page" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+  <!-- ✅ ส่วนใหม่: หน้าจอแสดงผลแบบมือถือ (Clean Mobile View) -->
+  <div id="public-asset-view" class="fixed inset-0 z-[6000] bg-[#f5f7fb] hidden overflow-y-auto">
+    <div class="w-full max-w-md mx-auto sm:my-10 bg-white sm:rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,.08)] overflow-hidden min-h-screen sm:min-h-0 flex flex-col">
+      <div class="bg-slate-900 text-white px-5 py-4 flex justify-between items-center sticky top-0 z-10">
+        <h2 class="text-lg font-bold">รายละเอียดสินทรัพย์</h2>
+        <button onclick="closePublicView()" class="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg font-bold transition">⚙️ เข้าสู่ระบบ</button>
+      </div>
+      <div class="p-6 flex flex-col gap-4">
+        <img id="pub-image" class="w-full h-64 object-cover rounded-xl bg-slate-100 mb-2 border shadow-sm" src="" onerror="this.src=FALLBACK_IMG">
+        
+        <div class="grid grid-cols-[100px_1fr] gap-y-3 text-[15px]">
+          <div class="font-bold text-slate-500 pt-1">รหัส:</div>
+          <div id="pub-assetno" class="font-extrabold text-slate-900 text-lg"></div>
+
+          <div class="font-bold text-slate-500">ชื่อ:</div>
+          <div id="pub-name" class="font-bold text-slate-800"></div>
+
+          <div class="font-bold text-slate-500">ประเภท:</div>
+          <div id="pub-category" class="text-slate-700"></div>
+
+          <div class="font-bold text-slate-500">ผู้ถือครอง:</div>
+          <div id="pub-owner" class="text-blue-600 font-bold"></div>
+
+          <div class="font-bold text-slate-500">วันที่ซื้อ:</div>
+          <div id="pub-date" class="text-slate-700"></div>
+
+          <div class="font-bold text-slate-500">ราคา:</div>
+          <div id="pub-price" class="text-slate-700 font-bold"></div>
+
+          <div class="font-bold text-slate-500 mt-1">สถานะ:</div>
+          <div><span id="pub-status" class="inline-block px-3 py-1 rounded-full text-xs font-bold border"></span></div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-slate-100">
+          <div class="font-bold text-slate-500 mb-2">สเปก:</div>
+          <div id="pub-spec" class="bg-slate-50 p-4 rounded-xl border text-sm whitespace-pre-line text-slate-700 font-mono"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="login-page" class="fixed inset-0 z-[100] flex items-center justify-center p-4 hidden">
     <div class="absolute top-[-10%] left-[-10%] w-72 md:w-96 h-72 md:h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
     <div class="absolute top-[20%] right-[-10%] w-72 md:w-96 h-72 md:h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
     <div class="absolute bottom-[-20%] left-[20%] w-72 md:w-96 h-72 md:h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-4000"></div>
@@ -399,7 +441,7 @@
       </div>
       <form id="asset-form" class="p-6 space-y-4 overflow-y-auto" onsubmit="handleAssetSubmit(event)">
         <input type="hidden" id="modal-asset-id">
-        <input type="hidden" id="modal-image-base64"> <!-- เพิ่มเพื่อเก็บรูปชั่วคราวรออัปโหลด -->
+        <input type="hidden" id="modal-image-base64">
         <img id="modal-image-preview" src="" class="asset-img-large hidden relative" alt="Preview">
 
         <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
@@ -426,7 +468,7 @@
           <div class="col-span-2"><label class="block text-xs font-bold text-slate-500 mb-1">ชื่อ</label><input type="text" id="modal-name" required class="w-full px-3 py-2 border rounded-lg text-sm"></div>
           <div><label class="block text-xs font-bold text-slate-500 mb-1">ประเภท</label><select id="modal-category" required class="w-full px-3 py-2 border rounded-lg text-sm"></select></div>
           <div><label class="block text-xs font-bold text-slate-500 mb-1">วันที่ซื้อ</label><input type="date" id="modal-purchase-date" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
-          <div><label class="block text-xs font-bold text-slate-500 mb-1">ราคา</label><input type="number" id="modal-price" required class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+          <div><label class="block text-xs font-bold text-slate-500 mb-1">ราคา</label><input type="number" id="modal-price" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
           <div><label class="block text-xs font-bold text-slate-500 mb-1">ผู้ถือครอง</label><select id="modal-employee" class="w-full px-3 py-2 border rounded-lg text-sm"></select></div>
           <div class="col-span-2">
             <label class="block text-xs font-bold text-slate-500 mb-1">สถานะ</label>
@@ -453,8 +495,13 @@
       <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto">
         <img id="detail-image" class="w-full h-56 object-cover rounded-xl border bg-slate-100">
         <div class="space-y-3">
-          <div id="detail-assetno" class="text-lg font-extrabold text-slate-800"></div>
-          <div id="detail-name" class="text-xl font-extrabold text-slate-800"></div>
+          <div class="flex justify-between items-start gap-2">
+            <div>
+              <div id="detail-assetno" class="text-lg font-extrabold text-slate-800"></div>
+              <div id="detail-name" class="text-xl font-extrabold text-slate-800"></div>
+            </div>
+            <div id="detail-qrcode" class="p-1 border rounded-lg bg-white shadow-sm shrink-0" title="คลิกขวาเพื่อเซฟ QR Code นำไปปริ้นต์"></div>
+          </div>
           <div class="flex gap-2"><span id="detail-category" class="px-2 py-1 rounded bg-slate-100 text-xs font-bold"></span><span id="detail-status" class="px-2 py-1 rounded text-xs font-bold"></span></div>
           <div id="detail-tags" class="flex flex-wrap gap-2"></div>
           <div id="detail-employee" class="font-bold text-blue-600"></div>
@@ -633,11 +680,81 @@
       return 'bg-slate-100 text-slate-700';
     }
 
+    // 🚀 จุดเปลี่ยน: เช็ค URL ตอนโหลดเว็บ ว่าเป็นการเปิดจากมือถือด้วยการสแกน QR หรือเปล่า
     window.onload = async () => {
       if (GAS_URL) await loadDataFromGAS();
       else updateBackendBadge();
-      checkAuth();
+      
+      handleInitialRoute();
     };
+
+    function handleInitialRoute() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const assetQuery = urlParams.get('assetNo') || urlParams.get('view');
+
+      // ถ้าเป็นการเปิดจาก QR Code (มี ?assetNo=...) ให้แสดงหน้าข้อมูลสะอาดตาเลย
+      if (assetQuery) {
+        showPublicAssetView(assetQuery);
+      } else {
+        // ถ้าเข้าเว็บปกติ ให้ไปหน้า Login
+        checkAuth();
+      }
+    }
+
+    // 🌟 ฟังก์ชันแสดงหน้าต่างรายละเอียดแบบสะอาด (สำหรับมือถือสแกน)
+    function showPublicAssetView(assetNo) {
+      const a = (store.assets || []).find(x => (x.assetNo || '').toUpperCase() === assetNo.toUpperCase());
+      
+      if (!a) {
+        Dialog.alert(`ไม่พบข้อมูลสินทรัพย์ทะเบียน: <b>${assetNo}</b>`, "ไม่พบข้อมูล", "error").then(() => {
+          closePublicView();
+        });
+        return;
+      }
+
+      const cat = store.categories.find(c => c.id == a.categoryId);
+      const emp = store.employees.find(e => e.id == a.employeeId);
+
+      document.getElementById('pub-assetno').innerText = a.assetNo || '-';
+      document.getElementById('pub-name').innerText = a.name;
+      document.getElementById('pub-category').innerText = cat?.name || 'ทั่วไป';
+      document.getElementById('pub-owner').innerText = emp ? `👤 ${emp.name}` : '-';
+      
+      let purchaseDateStr = '-';
+      let safeDateStr = a.purchaseDate || (a.spec && a.spec.__purchaseDate ? a.spec.__purchaseDate : '');
+      if (safeDateStr) {
+         try {
+           const d = new Date(safeDateStr);
+           if (!isNaN(d.getTime())) purchaseDateStr = d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric'});
+           else purchaseDateStr = safeDateStr;
+         } catch(e) {}
+      }
+      document.getElementById('pub-date').innerText = purchaseDateStr;
+      document.getElementById('pub-price').innerText = `${(a.price||0).toLocaleString()} ฿`;
+
+      const img = document.getElementById('pub-image');
+      img.src = getDisplayImageUrl(a.imageUrl);
+      
+      const sCol = getStatusColor(a.status);
+      const displayStatus = getStatusDisplay(a.status);
+      const statusEl = document.getElementById('pub-status');
+      statusEl.className = `inline-block px-3 py-1 rounded-full text-xs font-bold border ${sCol}`;
+      statusEl.innerText = displayStatus;
+
+      document.getElementById('pub-spec').innerHTML = specToText(a.spec).replace(/\n/g, '<br>') || 'ไม่มีข้อมูลสเปก';
+
+      // ซ่อนหน้าแอปปกติ และแสดงหน้ามือถือ
+      document.getElementById('login-page').classList.add('hidden');
+      document.getElementById('app-layout').classList.add('hidden');
+      document.getElementById('public-asset-view').classList.remove('hidden');
+    }
+
+    // ฟังก์ชันปิดหน้าต่างมือถือเพื่อเข้าสู่ระบบหลังบ้าน
+    function closePublicView() {
+      window.history.replaceState(null, document.title, window.location.pathname);
+      document.getElementById('public-asset-view').classList.add('hidden');
+      checkAuth();
+    }
 
     async function loadDataFromGAS() {
       document.getElementById('full-page-loader').classList.remove('hidden');
@@ -876,7 +993,27 @@
     }
 
     function handleAssetSearch(val) {
-      store.assetSearchQuery = val;
+      let q = val;
+      
+      // ดักจับกรณีใช้ปืนสแกน QR Code (ที่เป็นลิงก์ URL) ลงในช่องค้นหาโดยตรง
+      if (q.includes('?view=') || q.includes('?assetNo=')) {
+          try {
+              const parsed = new URL(q);
+              q = parsed.searchParams.get('assetNo') || parsed.searchParams.get('view') || q;
+          } catch(e) {
+              const m = q.match(/[\?&](?:view|assetNo)=([^&]+)/);
+              if (m) q = m[1];
+          }
+          q = decodeURIComponent(q).trim();
+          
+          // อัปเดตข้อความในช่องค้นหาให้เหลือแค่เลขทะเบียน
+          const searchInput = document.getElementById('asset-search-input');
+          if (searchInput && searchInput.value !== q) {
+              searchInput.value = q;
+          }
+      }
+
+      store.assetSearchQuery = q;
       currentAssetPage = 1;
       renderAssetTable();
     }
@@ -1102,7 +1239,6 @@
       reader.readAsArrayBuffer(file);
     }
 
-    // แก้ไข: ไม่ให้มีการอัปโหลดรูปอัตโนมัติ ให้ทำการเก็บเฉพาะภาพตัวอย่าง (Base64) ชั่วคราว
     function handleImageUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1143,10 +1279,9 @@
           const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
           updatePreview(dataUrl);
 
-          // นำ base64 ไปเก็บไว้ที่ hidden input เพื่อรอจังหวะกดบันทึก
           const base64Data = dataUrl.split(',')[1];
           document.getElementById('modal-image-base64').value = base64Data;
-          document.getElementById('modal-image-url').value = ''; // เคลียร์ของเก่า เพราะเลือกรูปใหม่แล้ว
+          document.getElementById('modal-image-url').value = ''; 
 
           Toast.show("✅ เตรียมรูปภาพสำเร็จ", "success");
           
@@ -1490,6 +1625,30 @@
       img.src = getDisplayImageUrl(a.imageUrl);
       img.onerror = () => (img.src = FALLBACK_IMG);
 
+      // สร้าง QR Code โยงไป URL โดยใส่ ?assetNo=
+      const qrContainer = document.getElementById('detail-qrcode');
+      qrContainer.innerHTML = ''; 
+      if (a.assetNo) {
+        let baseUrl = window.location.origin + window.location.pathname;
+        
+        if (!baseUrl.startsWith('http') || window.location.href.includes('srcdoc') || window.location.href.includes('null')) {
+            baseUrl = 'https://kriddanai73.github.io/'; 
+        }
+        if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
+        
+        // 🚀 อัปเดตให้เป็น ?assetNo= เพื่อรองรับโค้ดในมือถือ
+        const qrUrl = baseUrl + "?assetNo=" + encodeURIComponent(a.assetNo);
+
+        new QRCode(qrContainer, {
+          text: qrUrl,
+          width: 128,  
+          height: 128,
+          colorDark : "#0f172a",
+          colorLight : "#ffffff",
+          correctLevel : QRCode.CorrectLevel.M 
+        });
+      }
+
       document.getElementById('detail-tags').innerHTML = (a.tags||[]).map(t => `<span class="tag">#${t}</span>`).join('');
       document.getElementById('detail-spec').innerHTML = specToText(a.spec).replace(/\n/g, '<br>') || 'ไม่มีข้อมูลสเปก';
 
@@ -1508,8 +1667,19 @@
       const modal = document.getElementById('asset-detail-modal');
       modal.classList.remove('hidden'); modal.classList.add('flex');
     }
-    function hideAssetDetail() { document.getElementById('asset-detail-modal').classList.add('hidden'); document.getElementById('asset-detail-modal').classList.remove('flex'); currentDetailAssetId = null; }
-    function detailEdit() { if (!currentDetailAssetId) return; hideAssetDetail(); editAsset(currentDetailAssetId); }
+    
+    function hideAssetDetail() { 
+      document.getElementById('asset-detail-modal').classList.add('hidden'); 
+      document.getElementById('asset-detail-modal').classList.remove('flex'); 
+      currentDetailAssetId = null; 
+    }
+    
+    function detailEdit() { 
+      if (!currentDetailAssetId) return; 
+      const idToEdit = currentDetailAssetId;
+      hideAssetDetail(); 
+      editAsset(idToEdit); 
+    }
 
     async function addHistoryLog(assetId) {
       const note = await Dialog.prompt("โปรดระบุรายละเอียดประวัติเพิ่มเติม:", "", "เพิ่มประวัติ"); if (!note) return;
@@ -1592,7 +1762,7 @@
     function showAssetModal() {
       document.getElementById('asset-form').reset();
       document.getElementById('modal-asset-id').value = '';
-      document.getElementById('modal-image-base64').value = ''; // เคลียร์ของเก่า
+      document.getElementById('modal-image-base64').value = ''; 
       document.getElementById('modal-spec').value = '';
       document.getElementById('modal-purchase-date').value = '';
       document.getElementById('modal-assetno').value = getNextAssetNo();
@@ -1645,10 +1815,11 @@
       document.getElementById('modal-purchase-date').value = pDate;
 
       document.getElementById('modal-employee').value = a.employeeId||'';
-      document.getElementById('modal-price').value = a.price;
+      document.getElementById('modal-price').value = (a.price !== undefined && a.price !== null) ? a.price : '';
+      
       document.getElementById('modal-status').value = a.status;
       document.getElementById('modal-image-url').value = a.imageUrl;
-      document.getElementById('modal-image-base64').value = ''; // เคลียร์ของเก่า
+      document.getElementById('modal-image-base64').value = ''; 
       document.getElementById('modal-spec').value = specToText(a.spec);
 
       document.getElementById('modal-image-file').value = '';
@@ -1664,7 +1835,6 @@
       document.getElementById('asset-modal').classList.add('flex');
     }
 
-    // แก้ไข: เป็น async function และทำการอัปโหลดรูปเมื่อกดปุ่มบันทึก
     async function handleAssetSubmit(e) {
       e.preventDefault();
       
@@ -1684,7 +1854,6 @@
       let imageUrl = document.getElementById('modal-image-url').value;
       const base64Data = document.getElementById('modal-image-base64').value;
       
-      // ถ้ารูปมีการเปลี่ยนแปลง (ผู้ใช้เลือกไฟล์ใหม่) ให้ทำการอัปโหลดก่อน
       if (base64Data) {
         if (!GAS_URL) {
           return Dialog.alert("กรุณาเชื่อมต่อ Google Sheets Backend ก่อนบันทึกข้อมูลที่มีรูปภาพ", "ข้อผิดพลาด", "error");
@@ -1708,7 +1877,7 @@
           
           const result = await response.json();
           if (result.success) {
-            imageUrl = result.url; // เอา URL ที่เพิ่งได้มาใหม่แทนที่
+            imageUrl = result.url; 
           } else {
             throw new Error(result.error || "เกิดข้อผิดพลาดจากฝั่งเซิร์ฟเวอร์");
           }
@@ -1728,10 +1897,10 @@
         name: document.getElementById('modal-name').value,
         categoryId: parseInt(document.getElementById('modal-category').value),
         employeeId: document.getElementById('modal-employee').value ? parseInt(document.getElementById('modal-employee').value) : null,
-        price: parseFloat(document.getElementById('modal-price').value),
+        price: parseFloat(document.getElementById('modal-price').value) || 0,
         purchaseDate: pd,
         status: document.getElementById('modal-status').value,
-        imageUrl: imageUrl, // ใส่ URL (อาจเป็นอันเดิมหรืออันใหม่)
+        imageUrl: imageUrl,
         spec: specObj || {}
       };
 
@@ -1758,17 +1927,10 @@
       saveStoreToGAS(); 
       Toast.show("บันทึกสินทรัพย์เรียบร้อย");
       
-      // คืนค่าปุ่ม
       submitBtn.disabled = false;
       submitBtn.innerHTML = 'บันทึก';
       submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
-
-    function showUserModal() { if(!requireAdmin("จัดการผู้ใช้งาน")) return; document.getElementById('user-form').reset(); document.getElementById('modal-user-username-old').value = ''; document.getElementById('user-modal').classList.remove('hidden'); document.getElementById('user-modal').classList.add('flex'); }
-    function hideUserModal() { document.getElementById('user-modal').classList.add('hidden'); document.getElementById('user-modal').classList.remove('flex'); }
-    function editUser(u) { if(!requireAdmin("แก้ไข")) return; const user = store.users.find(x=>x.username===u); document.getElementById('modal-user-username-old').value = user.username; document.getElementById('user-modal-username').value = user.username; document.getElementById('user-modal-password').value = user.password; document.getElementById('user-modal-role').value = user.role; document.getElementById('user-modal').classList.remove('hidden'); document.getElementById('user-modal').classList.add('flex'); }
-    async function deleteUser(u) { if(!requireAdmin("ลบ")) return; if(store.currentUser.username === u) return Dialog.alert("ไม่สามารถลบตัวเองได้", "แจ้งเตือน", "error"); if(await Dialog.confirm(`คุณต้องการลบผู้ใช้ ${u} ใช่หรือไม่?`)) { store.users = store.users.filter(x=>x.username!==u); renderUserTable(); saveStoreToGAS(); Toast.show("ลบผู้ใช้เรียบร้อย"); } }
-    function handleUserSubmit(e) { e.preventDefault(); const oldU = document.getElementById('modal-user-username-old').value, u = document.getElementById('user-modal-username').value.toLowerCase().trim(), p = document.getElementById('user-modal-password').value, r = document.getElementById('user-modal-role').value; if(store.users.some(x=>x.username===u && x.username!==oldU)) return Dialog.alert("ชื่อผู้ใช้งานนี้ถูกใช้ไปแล้ว", "ข้อมูลซ้ำ", "error"); if(oldU) store.users[store.users.findIndex(x=>x.username===oldU)] = {username:u, password:p, role:r}; else store.users.push({username:u, password:p, role:r}); hideUserModal(); renderUserTable(); saveStoreToGAS(); Toast.show("บันทึกผู้ใช้เรียบร้อย"); }
 
     let statusChart = null;
     function updateDashboardStats() {
@@ -1820,6 +1982,95 @@
             <div class="text-2xl font-extrabold text-blue-600">${r.count}</div>
           </div>
         `).join("");
+    }
+
+    // --- Hardware Scanner Logic ---
+    let hwBarcodeBuffer = "";
+    let hwBarcodeTimer = null;
+
+    function playScanBeep() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const audioCtx = new AudioContext();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 800; 
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); 
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.15); 
+      } catch(e) { console.log("Audio not supported"); }
+    }
+
+    document.addEventListener("keydown", function(e) {
+      const tagName = e.target.tagName.toLowerCase();
+      const isInput = tagName === 'input' || tagName === 'textarea';
+      
+      if (isInput && e.target.id === 'asset-search-input' && e.key === 'Enter') {
+          e.preventDefault();
+          checkScannedAsset(e.target.value.trim());
+          return;
+      }
+      
+      if (isInput) return;
+
+      if (e.key === "Enter") {
+        if (hwBarcodeBuffer.length > 0) {
+          checkScannedAsset(hwBarcodeBuffer.trim());
+          hwBarcodeBuffer = ""; 
+        }
+      } else if (e.key.length === 1) { 
+        hwBarcodeBuffer += e.key;
+        
+        clearTimeout(hwBarcodeTimer);
+        hwBarcodeTimer = setTimeout(() => {
+          hwBarcodeBuffer = "";
+        }, 300);
+      }
+    });
+
+    function checkScannedAsset(scannedText) {
+      if (!scannedText) return;
+      
+      let targetAssetNo = scannedText.trim();
+      
+      // ดักจับกรณีปืนสแกนเนอร์ยิง QR Code จะได้มาเป็นลิงก์ URL เต็ม ให้ตัดเอาแค่เลขทะเบียน
+      if (targetAssetNo.includes('?view=') || targetAssetNo.includes('?assetNo=')) {
+         try {
+            const parsedUrl = new URL(targetAssetNo);
+            targetAssetNo = parsedUrl.searchParams.get('assetNo') || parsedUrl.searchParams.get('view') || targetAssetNo;
+         } catch(e) {
+            const m = targetAssetNo.match(/[\?&](?:view|assetNo)=([^&]+)/);
+            if(m) targetAssetNo = m[1];
+         }
+      }
+      
+      targetAssetNo = decodeURIComponent(targetAssetNo).trim();
+      
+      const foundAsset = (store.assets || []).find(a => 
+        (a.assetNo || '').trim().toUpperCase() === targetAssetNo.toUpperCase()
+      );
+
+      if (foundAsset) {
+        playScanBeep();
+        Toast.show(`🛒 สแกนพบ: ${foundAsset.assetNo} - ${foundAsset.name}`, "success");
+        
+        const searchInput = document.getElementById('asset-search-input');
+        if (searchInput) {
+            searchInput.value = foundAsset.assetNo;
+            store.assetSearchQuery = foundAsset.assetNo;
+            currentAssetPage = 1;
+            renderAssetTable();
+        }
+
+        hideAssetModal();
+        viewAssetDetail(foundAsset.id);
+      } else {
+        Dialog.alert(`ไม่พบข้อมูลสินทรัพย์ทะเบียน: <b>${targetAssetNo}</b><br>กรุณาตรวจสอบว่ามีข้อมูลในระบบหรือไม่`, "ไม่พบข้อมูล", "error");
+      }
     }
   </script>
 </body>
