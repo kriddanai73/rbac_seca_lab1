@@ -399,6 +399,7 @@
       </div>
       <form id="asset-form" class="p-6 space-y-4 overflow-y-auto" onsubmit="handleAssetSubmit(event)">
         <input type="hidden" id="modal-asset-id">
+        <input type="hidden" id="modal-image-base64"> <!-- เพิ่มเพื่อเก็บรูปชั่วคราวรออัปโหลด -->
         <img id="modal-image-preview" src="" class="asset-img-large hidden relative" alt="Preview">
 
         <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
@@ -592,16 +593,11 @@
       }
     };
 
-    // อัปเดต URL แล้ว (เพิ่ม /exec ต่อท้าย)
     let GAS_URL = localStorage.getItem('ASSET_PRO_GAS_URL') || 'https://script.google.com/macros/s/AKfycbwYdrHo8TOM1eX04gb5TsEf1fBeswHvEQ7j1o9dlpeMEaf9QUBglaFdeQLDC9f7mIpF/exec';
-
-    // เพิ่มฟังก์ชันสำหรับแปลง Link ภาพของ Google Drive ให้แสดงผลได้
     const FALLBACK_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
 
     function getDisplayImageUrl(url) {
       if (!url) return FALLBACK_IMG;
-      
-      // ถ้าเป็นลิงก์จาก Google Drive ให้แปลงเป็น thumbnail URL
       if (url.includes('drive.google.com')) {
         const match = url.match(/[?&]id=([^&]+)/) || url.match(/\/d\/([^/]+)/);
         if (match && match[1]) {
@@ -683,7 +679,6 @@
 
     async function saveStoreToGAS() {
       if (!GAS_URL) return;
-
       const toast = document.getElementById('sync-toast');
       toast.classList.remove('translate-y-full', 'opacity-0');
 
@@ -1107,6 +1102,7 @@
       reader.readAsArrayBuffer(file);
     }
 
+    // แก้ไข: ไม่ให้มีการอัปโหลดรูปอัตโนมัติ ให้ทำการเก็บเฉพาะภาพตัวอย่าง (Base64) ชั่วคราว
     function handleImageUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1147,53 +1143,17 @@
           const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
           updatePreview(dataUrl);
 
-          Toast.show("⏳ กำลังส่งรูปไปยัง Google Drive...", "info");
-          submitBtn.innerHTML = '⏳ กำลังอัปโหลด...';
-
+          // นำ base64 ไปเก็บไว้ที่ hidden input เพื่อรอจังหวะกดบันทึก
           const base64Data = dataUrl.split(',')[1];
-          
-          // ตรวจสอบว่าเชื่อมต่อ Web App URL แล้วหรือยัง
-          if (!GAS_URL) {
-            Dialog.alert("กรุณาเชื่อมต่อ Google Sheets Backend ก่อนอัปโหลดรูปภาพ", "ข้อผิดพลาด", "error");
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = 'บันทึก';
-            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            return;
-          }
+          document.getElementById('modal-image-base64').value = base64Data;
+          document.getElementById('modal-image-url').value = ''; // เคลียร์ของเก่า เพราะเลือกรูปใหม่แล้ว
 
-          // ส่งข้อมูลไปที่ Google Apps Script ของเราแทน ImgBB
-          fetch(GAS_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({
-              action: 'uploadImage',
-              base64: base64Data,
-              mimeType: 'image/jpeg',
-              filename: 'asset_' + Date.now() + '.jpg'
-            })
-          })
-          .then(response => response.json())
-          .then(result => {
-            if(result.success) {
-              const uploadedUrl = result.url;
-              document.getElementById('modal-image-url').value = uploadedUrl;
-              Toast.show("✅ อัปโหลดรูปลง Google Drive สำเร็จ! กดบันทึกได้เลย", "success");
-            } else {
-              throw new Error(result.error || "เกิดข้อผิดพลาดจากฝั่งเซิร์ฟเวอร์");
-            }
-          })
-          .catch(error => {
-            console.error("Upload Error:", error);
-            Dialog.alert("อัปโหลดรูปไม่สำเร็จ: " + error.message, "ข้อผิดพลาด", "error");
-            document.getElementById('modal-image-url').value = '';
-            updatePreview('');
-          })
-          .finally(() => {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = 'บันทึก';
-            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            event.target.value = '';
-          });
+          Toast.show("✅ เตรียมรูปภาพสำเร็จ", "success");
+          
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = 'บันทึก';
+          submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          event.target.value = '';
         }
         img.src = e.target.result;
       }
@@ -1471,26 +1431,21 @@
     async function deleteAsset(id) {
       if(!requireAdmin("ลบ")) return;
       if (await Dialog.confirm("คุณแน่ใจหรือไม่ที่จะลบสินทรัพย์นี้?", "ยืนยันการลบ")) {
-        // ค้นหาข้อมูลสินทรัพย์ก่อนลบเพื่อดึง URL รูปภาพ
         const assetToDelete = store.assets.find(a => a.id === id);
 
-        // ลบออกจากสถานะ (State)
         store.assets = (store.assets||[]).filter(a => a.id !== id);
         setupUI();
         saveStoreToGAS();
         
-        // หากมีรูปภาพ ให้ทำการดึง fileId จาก URL และส่งคำสั่งลบไปที่ backend
         if (assetToDelete && assetToDelete.imageUrl && GAS_URL) {
           const url = assetToDelete.imageUrl;
           let fileId = null;
           
-          // ตรวจสอบโครงสร้างของ URL (รองรับแบบ ?id= และ /d/)
           const match = url.match(/[?&]id=([^&]+)/) || url.match(/\/d\/([^/]+)/);
           
           if (match && match[1]) {
             fileId = match[1];
             
-            // ส่งคำขอให้ลบรูปไปที่ GAS
             fetch(GAS_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain' },
@@ -1637,11 +1592,18 @@
     function showAssetModal() {
       document.getElementById('asset-form').reset();
       document.getElementById('modal-asset-id').value = '';
+      document.getElementById('modal-image-base64').value = ''; // เคลียร์ของเก่า
       document.getElementById('modal-spec').value = '';
       document.getElementById('modal-purchase-date').value = '';
       document.getElementById('modal-assetno').value = getNextAssetNo();
       document.getElementById('modal-image-file').value = '';
       document.getElementById('modal-image-camera').value = '';
+      
+      const submitBtn = document.getElementById('asset-submit-btn');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'บันทึก';
+      submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      
       updatePreview('');
       document.getElementById('asset-modal').classList.remove('hidden');
       document.getElementById('asset-modal').classList.add('flex');
@@ -1686,18 +1648,27 @@
       document.getElementById('modal-price').value = a.price;
       document.getElementById('modal-status').value = a.status;
       document.getElementById('modal-image-url').value = a.imageUrl;
+      document.getElementById('modal-image-base64').value = ''; // เคลียร์ของเก่า
       document.getElementById('modal-spec').value = specToText(a.spec);
 
       document.getElementById('modal-image-file').value = '';
       document.getElementById('modal-image-camera').value = '';
+      
+      const submitBtn = document.getElementById('asset-submit-btn');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'บันทึก';
+      submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
 
       updatePreview(a.imageUrl);
       document.getElementById('asset-modal').classList.remove('hidden');
       document.getElementById('asset-modal').classList.add('flex');
     }
 
-    function handleAssetSubmit(e) {
+    // แก้ไข: เป็น async function และทำการอัปโหลดรูปเมื่อกดปุ่มบันทึก
+    async function handleAssetSubmit(e) {
       e.preventDefault();
+      
+      const submitBtn = document.getElementById('asset-submit-btn');
       const id = document.getElementById('modal-asset-id').value;
       const assetId = id ? parseInt(id) : null;
 
@@ -1709,6 +1680,46 @@
       if(isAssetNoDuplicate(assetNo, assetId)) return Dialog.alert("เลขทะเบียนนี้ถูกใช้งานแล้ว กรุณาเปลี่ยนใหม่", "ทะเบียนซ้ำ", "error");
 
       const pd = document.getElementById('modal-purchase-date').value;
+      
+      let imageUrl = document.getElementById('modal-image-url').value;
+      const base64Data = document.getElementById('modal-image-base64').value;
+      
+      // ถ้ารูปมีการเปลี่ยนแปลง (ผู้ใช้เลือกไฟล์ใหม่) ให้ทำการอัปโหลดก่อน
+      if (base64Data) {
+        if (!GAS_URL) {
+          return Dialog.alert("กรุณาเชื่อมต่อ Google Sheets Backend ก่อนบันทึกข้อมูลที่มีรูปภาพ", "ข้อผิดพลาด", "error");
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ กำลังอัปโหลดรูป...';
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        
+        try {
+          const response = await fetch(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({
+              action: 'uploadImage',
+              base64: base64Data,
+              mimeType: 'image/jpeg',
+              filename: 'asset_' + Date.now() + '.jpg'
+            })
+          });
+          
+          const result = await response.json();
+          if (result.success) {
+            imageUrl = result.url; // เอา URL ที่เพิ่งได้มาใหม่แทนที่
+          } else {
+            throw new Error(result.error || "เกิดข้อผิดพลาดจากฝั่งเซิร์ฟเวอร์");
+          }
+        } catch (error) {
+          console.error("Upload Error:", error);
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = 'บันทึก';
+          submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          return Dialog.alert("อัปโหลดรูปไม่สำเร็จ: " + error.message, "ข้อผิดพลาด", "error");
+        }
+      }
 
       const payload = {
         id: assetId ?? Date.now(),
@@ -1720,7 +1731,7 @@
         price: parseFloat(document.getElementById('modal-price').value),
         purchaseDate: pd,
         status: document.getElementById('modal-status').value,
-        imageUrl: document.getElementById('modal-image-url').value,
+        imageUrl: imageUrl, // ใส่ URL (อาจเป็นอันเดิมหรืออันใหม่)
         spec: specObj || {}
       };
 
@@ -1742,7 +1753,15 @@
         logAssetEvent(assetId, { type:'UPDATE', ts, by:user });
       }
 
-      hideAssetModal(); setupUI(); saveStoreToGAS(); Toast.show("บันทึกสินทรัพย์เรียบร้อย");
+      hideAssetModal(); 
+      setupUI(); 
+      saveStoreToGAS(); 
+      Toast.show("บันทึกสินทรัพย์เรียบร้อย");
+      
+      // คืนค่าปุ่ม
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'บันทึก';
+      submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
 
     function showUserModal() { if(!requireAdmin("จัดการผู้ใช้งาน")) return; document.getElementById('user-form').reset(); document.getElementById('modal-user-username-old').value = ''; document.getElementById('user-modal').classList.remove('hidden'); document.getElementById('user-modal').classList.add('flex'); }
