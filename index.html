@@ -90,47 +90,6 @@
     <div class="text-sm font-bold tracking-wide">กำลังซิงค์ข้อมูลกับ Sheets...</div>
   </div>
 
-  <!-- ✅ ส่วนใหม่: หน้าจอแสดงผลแบบมือถือ (Clean Mobile View) -->
-  <div id="public-asset-view" class="fixed inset-0 z-[6000] bg-[#f5f7fb] hidden overflow-y-auto">
-    <div class="w-full max-w-md mx-auto sm:my-10 bg-white sm:rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,.08)] overflow-hidden min-h-screen sm:min-h-0 flex flex-col">
-      <div class="bg-slate-900 text-white px-5 py-4 flex justify-between items-center sticky top-0 z-10">
-        <h2 class="text-lg font-bold">รายละเอียดสินทรัพย์</h2>
-        <button onclick="closePublicView()" class="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg font-bold transition">⚙️ เข้าสู่ระบบ</button>
-      </div>
-      <div class="p-6 flex flex-col gap-4">
-        <img id="pub-image" class="w-full h-64 object-cover rounded-xl bg-slate-100 mb-2 border shadow-sm" src="" onerror="this.src=FALLBACK_IMG">
-        
-        <div class="grid grid-cols-[100px_1fr] gap-y-3 text-[15px]">
-          <div class="font-bold text-slate-500 pt-1">รหัส:</div>
-          <div id="pub-assetno" class="font-extrabold text-slate-900 text-lg"></div>
-
-          <div class="font-bold text-slate-500">ชื่อ:</div>
-          <div id="pub-name" class="font-bold text-slate-800"></div>
-
-          <div class="font-bold text-slate-500">ประเภท:</div>
-          <div id="pub-category" class="text-slate-700"></div>
-
-          <div class="font-bold text-slate-500">ผู้ถือครอง:</div>
-          <div id="pub-owner" class="text-blue-600 font-bold"></div>
-
-          <div class="font-bold text-slate-500">วันที่ซื้อ:</div>
-          <div id="pub-date" class="text-slate-700"></div>
-
-          <div class="font-bold text-slate-500">ราคา:</div>
-          <div id="pub-price" class="text-slate-700 font-bold"></div>
-
-          <div class="font-bold text-slate-500 mt-1">สถานะ:</div>
-          <div><span id="pub-status" class="inline-block px-3 py-1 rounded-full text-xs font-bold border"></span></div>
-        </div>
-
-        <div class="mt-4 pt-4 border-t border-slate-100">
-          <div class="font-bold text-slate-500 mb-2">สเปก:</div>
-          <div id="pub-spec" class="bg-slate-50 p-4 rounded-xl border text-sm whitespace-pre-line text-slate-700 font-mono"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div id="login-page" class="fixed inset-0 z-[100] flex items-center justify-center p-4 hidden">
     <div class="absolute top-[-10%] left-[-10%] w-72 md:w-96 h-72 md:h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
     <div class="absolute top-[20%] right-[-10%] w-72 md:w-96 h-72 md:h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
@@ -500,7 +459,15 @@
               <div id="detail-assetno" class="text-lg font-extrabold text-slate-800"></div>
               <div id="detail-name" class="text-xl font-extrabold text-slate-800"></div>
             </div>
-            <div id="detail-qrcode" class="p-1 border rounded-lg bg-white shadow-sm shrink-0" title="คลิกขวาเพื่อเซฟ QR Code นำไปปริ้นต์"></div>
+            
+            <!-- ✅ เปลี่ยนเป็นแบบมีปุ่มดาวน์โหลด QR Code -->
+            <div class="flex flex-col items-center gap-2 shrink-0">
+              <div id="detail-qrcode" class="p-1 border rounded-lg bg-white shadow-sm" title="คลิกขวาเพื่อเซฟ QR Code นำไปปริ้นต์"></div>
+              <button id="btn-download-qr" class="text-[10px] bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md font-bold hover:bg-blue-200 transition w-full flex items-center justify-center gap-1 shadow-sm">
+                <span>⬇️</span> โหลด QR
+              </button>
+            </div>
+            
           </div>
           <div class="flex gap-2"><span id="detail-category" class="px-2 py-1 rounded bg-slate-100 text-xs font-bold"></span><span id="detail-status" class="px-2 py-1 rounded text-xs font-bold"></span></div>
           <div id="detail-tags" class="flex flex-wrap gap-2"></div>
@@ -680,7 +647,9 @@
       return 'bg-slate-100 text-slate-700';
     }
 
-    // 🚀 จุดเปลี่ยน: เช็ค URL ตอนโหลดเว็บ ว่าเป็นการเปิดจากมือถือด้วยการสแกน QR หรือเปล่า
+    // ✅ ตัวแปรเก็บการแสกน QR ก่อนการล็อกอิน
+    let pendingAssetView = null;
+
     window.onload = async () => {
       if (GAS_URL) await loadDataFromGAS();
       else updateBackendBadge();
@@ -692,67 +661,11 @@
       const urlParams = new URLSearchParams(window.location.search);
       const assetQuery = urlParams.get('assetNo') || urlParams.get('view');
 
-      // ถ้าเป็นการเปิดจาก QR Code (มี ?assetNo=...) ให้แสดงหน้าข้อมูลสะอาดตาเลย
+      // ✅ เก็บค่าเอาไว้ ถ้ายิง QR Code เข้ามา แล้วบังคับไปหน้า Login ก่อน
       if (assetQuery) {
-        showPublicAssetView(assetQuery);
-      } else {
-        // ถ้าเข้าเว็บปกติ ให้ไปหน้า Login
-        checkAuth();
+        pendingAssetView = assetQuery;
       }
-    }
-
-    // 🌟 ฟังก์ชันแสดงหน้าต่างรายละเอียดแบบสะอาด (สำหรับมือถือสแกน)
-    function showPublicAssetView(assetNo) {
-      const a = (store.assets || []).find(x => (x.assetNo || '').toUpperCase() === assetNo.toUpperCase());
       
-      if (!a) {
-        Dialog.alert(`ไม่พบข้อมูลสินทรัพย์ทะเบียน: <b>${assetNo}</b>`, "ไม่พบข้อมูล", "error").then(() => {
-          closePublicView();
-        });
-        return;
-      }
-
-      const cat = store.categories.find(c => c.id == a.categoryId);
-      const emp = store.employees.find(e => e.id == a.employeeId);
-
-      document.getElementById('pub-assetno').innerText = a.assetNo || '-';
-      document.getElementById('pub-name').innerText = a.name;
-      document.getElementById('pub-category').innerText = cat?.name || 'ทั่วไป';
-      document.getElementById('pub-owner').innerText = emp ? `👤 ${emp.name}` : '-';
-      
-      let purchaseDateStr = '-';
-      let safeDateStr = a.purchaseDate || (a.spec && a.spec.__purchaseDate ? a.spec.__purchaseDate : '');
-      if (safeDateStr) {
-         try {
-           const d = new Date(safeDateStr);
-           if (!isNaN(d.getTime())) purchaseDateStr = d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric'});
-           else purchaseDateStr = safeDateStr;
-         } catch(e) {}
-      }
-      document.getElementById('pub-date').innerText = purchaseDateStr;
-      document.getElementById('pub-price').innerText = `${(a.price||0).toLocaleString()} ฿`;
-
-      const img = document.getElementById('pub-image');
-      img.src = getDisplayImageUrl(a.imageUrl);
-      
-      const sCol = getStatusColor(a.status);
-      const displayStatus = getStatusDisplay(a.status);
-      const statusEl = document.getElementById('pub-status');
-      statusEl.className = `inline-block px-3 py-1 rounded-full text-xs font-bold border ${sCol}`;
-      statusEl.innerText = displayStatus;
-
-      document.getElementById('pub-spec').innerHTML = specToText(a.spec).replace(/\n/g, '<br>') || 'ไม่มีข้อมูลสเปก';
-
-      // ซ่อนหน้าแอปปกติ และแสดงหน้ามือถือ
-      document.getElementById('login-page').classList.add('hidden');
-      document.getElementById('app-layout').classList.add('hidden');
-      document.getElementById('public-asset-view').classList.remove('hidden');
-    }
-
-    // ฟังก์ชันปิดหน้าต่างมือถือเพื่อเข้าสู่ระบบหลังบ้าน
-    function closePublicView() {
-      window.history.replaceState(null, document.title, window.location.pathname);
-      document.getElementById('public-asset-view').classList.add('hidden');
       checkAuth();
     }
 
@@ -791,6 +704,9 @@
       } finally {
         document.getElementById('full-page-loader').classList.add('hidden');
         updateBackendBadge();
+        
+        // ในกรณีที่มี pending scan ค้างไว้ตอนดึงข้อมูลเสร็จ ให้เช็คด้วย
+        if(store.currentUser && pendingAssetView) checkAuth();
       }
     }
 
@@ -924,18 +840,41 @@
 
       if (found) {
         store.currentUser = { name: String(found.username).toUpperCase(), role: found.role, username: found.username };
-        checkAuth();
         Toast.show(`ยินดีต้อนรับ ${store.currentUser.name}`);
+        checkAuth();
       } else {
         Dialog.alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', "เข้าสู่ระบบล้มเหลว", "error");
       }
     }
+    
     function handleLogout() { store.currentUser = null; checkAuth(); }
 
     function checkAuth() {
       const lp = document.getElementById('login-page'), app = document.getElementById('app-layout');
-      if (!store.currentUser) { lp.classList.remove('hidden'); app.classList.add('hidden'); toggleMobileNav(false); }
-      else { lp.classList.add('hidden'); app.classList.remove('hidden'); setupUI(); }
+      if (!store.currentUser) { 
+        lp.classList.remove('hidden'); 
+        app.classList.add('hidden'); 
+        toggleMobileNav(false); 
+      }
+      else { 
+        lp.classList.add('hidden'); 
+        app.classList.remove('hidden'); 
+        setupUI(); 
+        
+        // ✅ ถ้าล็อกอินสำเร็จ และมีการสแกน QR Code ค้างไว้ ให้เปิดหน้ารายละเอียดทันที
+        if (pendingAssetView) {
+            const a = (store.assets || []).find(x => (x.assetNo || '').toUpperCase() === pendingAssetView.toUpperCase());
+            if (a) {
+                showSection('assets'); 
+                viewAssetDetail(a.id);
+            } else {
+                Dialog.alert(`ไม่พบข้อมูลสินทรัพย์ทะเบียน: <b>${pendingAssetView}</b><br>กรุณาตรวจสอบว่ามีข้อมูลในระบบหรือไม่`, "ไม่พบข้อมูล", "error");
+            }
+            pendingAssetView = null; // ล้างค่า
+            // เคลียร์ URL param ไม่ให้เด้งซ้ำตอนรีเฟรช
+            window.history.replaceState(null, document.title, window.location.pathname);
+        }
+      }
     }
 
     function setupUI() {
@@ -995,7 +934,6 @@
     function handleAssetSearch(val) {
       let q = val;
       
-      // ดักจับกรณีใช้ปืนสแกน QR Code (ที่เป็นลิงก์ URL) ลงในช่องค้นหาโดยตรง
       if (q.includes('?view=') || q.includes('?assetNo=')) {
           try {
               const parsed = new URL(q);
@@ -1006,7 +944,6 @@
           }
           q = decodeURIComponent(q).trim();
           
-          // อัปเดตข้อความในช่องค้นหาให้เหลือแค่เลขทะเบียน
           const searchInput = document.getElementById('asset-search-input');
           if (searchInput && searchInput.value !== q) {
               searchInput.value = q;
@@ -1625,7 +1562,7 @@
       img.src = getDisplayImageUrl(a.imageUrl);
       img.onerror = () => (img.src = FALLBACK_IMG);
 
-      // สร้าง QR Code โยงไป URL โดยใส่ ?assetNo=
+      // สร้าง QR Code
       const qrContainer = document.getElementById('detail-qrcode');
       qrContainer.innerHTML = ''; 
       if (a.assetNo) {
@@ -1636,7 +1573,6 @@
         }
         if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
         
-        // 🚀 อัปเดตให้เป็น ?assetNo= เพื่อรองรับโค้ดในมือถือ
         const qrUrl = baseUrl + "?assetNo=" + encodeURIComponent(a.assetNo);
 
         new QRCode(qrContainer, {
@@ -1647,6 +1583,12 @@
           colorLight : "#ffffff",
           correctLevel : QRCode.CorrectLevel.M 
         });
+      }
+
+      // ✅ ผูกฟังก์ชันการดาวน์โหลด QR Code กับปุ่ม
+      const btnDownloadQr = document.getElementById('btn-download-qr');
+      if (btnDownloadQr) {
+        btnDownloadQr.onclick = () => downloadQRCode(a.assetNo);
       }
 
       document.getElementById('detail-tags').innerHTML = (a.tags||[]).map(t => `<span class="tag">#${t}</span>`).join('');
@@ -1666,6 +1608,34 @@
 
       const modal = document.getElementById('asset-detail-modal');
       modal.classList.remove('hidden'); modal.classList.add('flex');
+    }
+    
+    // ✅ ฟังก์ชันสำหรับดาวน์โหลดรูป QR Code
+    function downloadQRCode(assetNo) {
+      const qrContainer = document.getElementById('detail-qrcode');
+      if (!qrContainer) return;
+      
+      const canvas = qrContainer.querySelector('canvas');
+      const img = qrContainer.querySelector('img');
+      let url = '';
+
+      if (canvas && canvas.style.display !== 'none') {
+          url = canvas.toDataURL("image/png");
+      } else if (img && img.src) {
+          url = img.src;
+      }
+
+      if (url) {
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `QR_${assetNo || 'Asset'}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          Toast.show("ดาวน์โหลดไฟล์ QR Code สำเร็จ", "success");
+      } else {
+          Dialog.alert("ระบบยังสร้างรูป QR Code ไม่เสร็จสมบูรณ์ โปรดลองอีกครั้ง", "ข้อผิดพลาด", "error");
+      }
     }
     
     function hideAssetDetail() { 
@@ -2069,7 +2039,7 @@
         hideAssetModal();
         viewAssetDetail(foundAsset.id);
       } else {
-        Dialog.alert(`ไม่พบข้อมูลสินทรัพย์ทะเบียน  : <b>${targetAssetNo}</b><br>กรุณาตรวจสอบว่ามีข้อมูลในระบบหรือไม่`, "ไม่พบข้อมูล", "error");
+        Dialog.alert(`ไม่พบข้อมูลสินทรัพย์ทะเบียน: <b>${targetAssetNo}</b><br>กรุณาตรวจสอบว่ามีข้อมูลในระบบหรือไม่`, "ไม่พบข้อมูล", "error");
       }
     }
   </script>
