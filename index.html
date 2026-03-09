@@ -9,15 +9,15 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; color: #1e293b; }
     .chart-container { position: relative; width: 100%; height: 250px; }
     .sidebar-link.active { background-color: #3b82f6; color: white; }
     .status-badge { padding: 2px 8px; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
-    .fade-in { animation: fadeIn 0.3s ease-in-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     #login-page { background-color: #0f172a; position: fixed; inset: 0; overflow: hidden; }
 
     @keyframes blob {
@@ -82,12 +82,12 @@
 
   <div id="full-page-loader" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[2000] hidden flex flex-col items-center justify-center text-white">
     <div class="animate-spin text-5xl mb-4">⚙️</div>
-    <div class="font-bold tracking-widest animate-pulse">กำลังโหลดข้อมูลจาก Google Sheets...</div>
+    <div class="font-bold tracking-widest animate-pulse">กำลังโหลดข้อมูล...</div>
   </div>
 
   <div id="sync-toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 z-[1500] transition-all duration-300 transform translate-y-full opacity-0">
     <div class="animate-spin">🔄</div>
-    <div class="text-sm font-bold tracking-wide">กำลังซิงค์ข้อมูลกับ Sheets...</div>
+    <div class="text-sm font-bold tracking-wide">กำลังซิงค์ข้อมูล...</div>
   </div>
 
   <div id="login-page" class="fixed inset-0 z-[100] flex items-center justify-center p-4 hidden">
@@ -192,33 +192,92 @@
     <main class="flex-1 overflow-y-auto bg-slate-50">
       <div class="p-4 sm:p-6 w-full max-w-none mx-0">
 
+        <!-- ================= DASHBOARD SECTION (IMPROVED) ================= -->
         <section id="section-dashboard" class="fade-in space-y-6">
-          <h2 class="text-2xl font-bold text-slate-800">แดชบอร์ดภาพรวม</h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-              <p class="text-slate-500 text-sm">สินทรัพย์ทั้งหมด</p>
-              <h3 id="stat-total-count" class="text-3xl font-bold text-slate-800">0</h3>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-              <p class="text-slate-500 text-sm">มูลค่ารวม (บาท)</p>
-              <h3 id="stat-total-value" class="text-3xl font-bold text-blue-600">0</h3>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-              <p class="text-slate-500 text-sm">พนักงานในระบบ</p>
-              <h3 id="stat-emp-count" class="text-3xl font-bold text-emerald-600">0</h3>
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-extrabold text-slate-800">แดชบอร์ดภาพรวม</h2>
+              <p class="text-slate-500 text-sm mt-1">สรุปข้อมูลสถิติของระบบจัดการสินทรัพย์</p>
             </div>
           </div>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-              <h4 class="font-bold text-slate-700 mb-4">สถานะทางกายภาพ</h4>
-              <div class="chart-container"><canvas id="statusChart"></canvas></div>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-              <div class="flex items-center justify-between mb-4">
-                <h4 class="font-bold text-slate-700">สัดส่วนตามประเภท</h4>
-                <span class="text-xs text-slate-400">รวม: <b id="cat-total">0</b></span>
+
+          <!-- Stat Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            <div class="bg-gradient-to-br from-blue-500 to-blue-700 p-6 rounded-2xl shadow-lg shadow-blue-200/50 text-white relative overflow-hidden group">
+              <div class="absolute -right-4 -bottom-4 opacity-20 text-9xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">📦</div>
+              <div class="relative z-10">
+                <p class="text-blue-100 text-sm font-semibold mb-1 tracking-wide">สินทรัพย์ทั้งหมด</p>
+                <div class="flex items-baseline gap-2">
+                  <h3 id="stat-total-count" class="text-5xl font-extrabold tracking-tight drop-shadow-md">0</h3>
+                  <span class="text-blue-200 text-sm font-medium">รายการ</span>
+                </div>
               </div>
-              <div id="category-count-list" class="space-y-3"></div>
+            </div>
+            <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 rounded-2xl shadow-lg shadow-emerald-200/50 text-white relative overflow-hidden group">
+              <div class="absolute -right-4 -bottom-4 opacity-20 text-9xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">💰</div>
+              <div class="relative z-10">
+                <p class="text-emerald-100 text-sm font-semibold mb-1 tracking-wide">มูลค่ารวม (บาท)</p>
+                <div class="flex items-baseline gap-2">
+                  <h3 id="stat-total-value" class="text-4xl font-extrabold tracking-tight drop-shadow-md">0</h3>
+                </div>
+              </div>
+            </div>
+            <div class="bg-gradient-to-br from-purple-500 to-purple-700 p-6 rounded-2xl shadow-lg shadow-purple-200/50 text-white relative overflow-hidden group">
+              <div class="absolute -right-4 -bottom-4 opacity-20 text-9xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">👥</div>
+              <div class="relative z-10">
+                <p class="text-purple-100 text-sm font-semibold mb-1 tracking-wide">พนักงานในระบบ</p>
+                <div class="flex items-baseline gap-2">
+                  <h3 id="stat-emp-count" class="text-5xl font-extrabold tracking-tight drop-shadow-md">0</h3>
+                  <span class="text-purple-200 text-sm font-medium">คน</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts & Lists -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 flex flex-col">
+              <div class="mb-6">
+                <h4 class="font-extrabold text-slate-800 text-lg">สถานะทางกายภาพ</h4>
+                <p class="text-xs text-slate-500">สัดส่วนตามสถานะการใช้งานปัจจุบัน</p>
+              </div>
+              <div class="chart-container flex-1 min-h-[250px]"><canvas id="statusChart"></canvas></div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 flex flex-col">
+              <div class="flex items-center justify-between mb-6">
+                <div>
+                  <h4 class="font-extrabold text-slate-800 text-lg">สัดส่วนตามประเภท</h4>
+                  <p class="text-xs text-slate-500">จำแนกหมวดหมู่สินทรัพย์ทั้งหมด</p>
+                </div>
+                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">รวม: <b id="cat-total">0</b></span>
+              </div>
+              <div id="category-count-list" class="space-y-5 overflow-y-auto pr-2 max-h-[300px] scroll-hide flex-1"></div>
+            </div>
+          </div>
+
+          <!-- Recent Assets (New Addition) -->
+          <div class="bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100">
+            <div class="flex justify-between items-center mb-6">
+              <div>
+                 <h4 class="font-extrabold text-slate-800 text-lg flex items-center gap-2">✨ สินทรัพย์เพิ่มล่าสุด</h4>
+                 <p class="text-xs text-slate-500">5 รายการล่าสุดที่ถูกบันทึกเข้าระบบ</p>
+              </div>
+              <button onclick="showSection('assets')" class="text-sm bg-slate-50 hover:bg-slate-100 border text-blue-600 font-bold py-2 px-4 rounded-lg transition">ดูทั้งหมด →</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm whitespace-nowrap">
+                 <thead class="text-slate-400 border-b border-slate-100 uppercase text-[10px] tracking-wider font-extrabold">
+                   <tr>
+                     <th class="pb-3 px-2">รายการ / ทะเบียน</th>
+                     <th class="pb-3 px-2">ประเภท</th>
+                     <th class="pb-3 px-2 text-right">ราคา (บาท)</th>
+                     <th class="pb-3 px-2 text-center">สถานะ</th>
+                   </tr>
+                 </thead>
+                 <tbody id="recent-assets-list" class="divide-y divide-slate-50">
+                   <!-- Populated by JS -->
+                 </tbody>
+              </table>
             </div>
           </div>
         </section>
@@ -460,7 +519,6 @@
               <div id="detail-name" class="text-xl font-extrabold text-slate-800"></div>
             </div>
             
-            <!-- ✅ เปลี่ยนเป็นแบบมีปุ่มดาวน์โหลด QR Code -->
             <div class="flex flex-col items-center gap-2 shrink-0">
               <div id="detail-qrcode" class="p-1 border rounded-lg bg-white shadow-sm" title="คลิกขวาเพื่อเซฟ QR Code นำไปปริ้นต์"></div>
               <button id="btn-download-qr" class="text-[10px] bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md font-bold hover:bg-blue-200 transition w-full flex items-center justify-center gap-1 shadow-sm">
@@ -626,7 +684,7 @@
       selectedCategoryFilter: 'all',
       assetSearchQuery: '',
       users: [{ username: 'admin', password: '1234', role: 'ADMIN' }, { username: 'staff', password: '1234', role: 'STAFF' }],
-      categories: [{ id: 1, name: 'คอมพิวเตอร์' }],
+      categories: [{ id: 1, name: 'คอมพิวเตอร์' }, { id: 2, name: 'อุปกรณ์สำนักงาน' }],
       branches: [{ id: 1, name: 'สนง.ใหญ่', location: 'กทม' }],
       departments: [{ id: 1, name: 'IT' }],
       employees: [{ id: 1, name: 'สมชาย รักงาน', branchId: 1, deptId: 1, position: 'IT' }],
@@ -647,7 +705,6 @@
       return 'bg-slate-100 text-slate-700';
     }
 
-    // ✅ ตัวแปรเก็บการแสกน QR ก่อนการล็อกอิน
     let pendingAssetView = null;
 
     window.onload = async () => {
@@ -661,7 +718,6 @@
       const urlParams = new URLSearchParams(window.location.search);
       const assetQuery = urlParams.get('assetNo') || urlParams.get('view');
 
-      // ✅ เก็บค่าเอาไว้ ถ้ายิง QR Code เข้ามา แล้วบังคับไปหน้า Login ก่อน
       if (assetQuery) {
         pendingAssetView = assetQuery;
       }
@@ -705,7 +761,6 @@
         document.getElementById('full-page-loader').classList.add('hidden');
         updateBackendBadge();
         
-        // ในกรณีที่มี pending scan ค้างไว้ตอนดึงข้อมูลเสร็จ ให้เช็คด้วย
         if(store.currentUser && pendingAssetView) checkAuth();
       }
     }
@@ -861,7 +916,6 @@
         app.classList.remove('hidden'); 
         setupUI(); 
         
-        // ✅ ถ้าล็อกอินสำเร็จ และมีการสแกน QR Code ค้างไว้ ให้เปิดหน้ารายละเอียดทันที
         if (pendingAssetView) {
             const a = (store.assets || []).find(x => (x.assetNo || '').toUpperCase() === pendingAssetView.toUpperCase());
             if (a) {
@@ -870,8 +924,7 @@
             } else {
                 Dialog.alert(`ไม่พบข้อมูลสินทรัพย์ทะเบียน: <b>${pendingAssetView}</b><br>กรุณาตรวจสอบว่ามีข้อมูลในระบบหรือไม่`, "ไม่พบข้อมูล", "error");
             }
-            pendingAssetView = null; // ล้างค่า
-            // เคลียร์ URL param ไม่ให้เด้งซ้ำตอนรีเฟรช
+            pendingAssetView = null; 
             window.history.replaceState(null, document.title, window.location.pathname);
         }
       }
@@ -1585,7 +1638,6 @@
         });
       }
 
-      // ✅ ผูกฟังก์ชันการดาวน์โหลด QR Code กับปุ่ม
       const btnDownloadQr = document.getElementById('btn-download-qr');
       if (btnDownloadQr) {
         btnDownloadQr.onclick = () => downloadQRCode(a.assetNo);
@@ -1610,7 +1662,6 @@
       modal.classList.remove('hidden'); modal.classList.add('flex');
     }
     
-    // ✅ ฟังก์ชันสำหรับดาวน์โหลดรูป QR Code
     function downloadQRCode(assetNo) {
       const qrContainer = document.getElementById('detail-qrcode');
       if (!qrContainer) return;
@@ -1904,9 +1955,33 @@
 
     let statusChart = null;
     function updateDashboardStats() {
-      document.getElementById('stat-total-count').innerText = (store.assets||[]).length;
+      document.getElementById('stat-total-count').innerText = (store.assets||[]).length.toLocaleString();
       document.getElementById('stat-total-value').innerText = (store.assets||[]).reduce((s, x) => s + (x.price || 0), 0).toLocaleString();
-      document.getElementById('stat-emp-count').innerText = (store.employees||[]).length;
+      document.getElementById('stat-emp-count').innerText = (store.employees||[]).length.toLocaleString();
+
+      // Populate recent assets table
+      const recentList = document.getElementById('recent-assets-list');
+      if(recentList) {
+        const sortedAssets = [...(store.assets||[])].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+        recentList.innerHTML = sortedAssets.map(a => {
+           const cat = store.categories.find(c => c.id == a.categoryId);
+           return `
+            <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="viewAssetDetail(${a.id}); showSection('assets')">
+              <td class="py-3 px-2">
+                <div class="font-bold text-slate-800">${a.name}</div>
+                <div class="text-[10px] text-slate-500 font-mono mt-0.5">${a.assetNo}</div>
+              </td>
+              <td class="py-3 px-2">
+                <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-md font-medium border border-slate-200">${cat?.name||'-'}</span>
+              </td>
+              <td class="py-3 px-2 text-right font-bold text-slate-700">${(a.price||0).toLocaleString()}</td>
+              <td class="py-3 px-2 text-center">
+                <span class="status-badge ${getStatusColor(a.status)}">${getStatusDisplay(a.status)}</span>
+              </td>
+            </tr>
+           `;
+        }).join('') || '<tr><td colspan="4" class="py-8 text-center text-slate-400 text-sm">ยังไม่มีข้อมูลสินทรัพย์</td></tr>';
+      }
     }
 
     function initCharts() {
@@ -1927,10 +2002,25 @@
           datasets: [{
             data: [activeCount, brokenCount, maintenanceCount, availableCount],
             backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#3b82f6'],
-            borderWidth: 0
+            borderWidth: 0,
+            hoverOffset: 5
           }]
         },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '75%' }
+        options: { 
+          responsive: true, 
+          maintainAspectRatio: false, 
+          cutout: '70%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                usePointStyle: true,
+                padding: 20,
+                font: { family: 'Sarabun' }
+              }
+            }
+          }
+        }
       });
 
       const list = document.getElementById("category-count-list");
@@ -1943,15 +2033,20 @@
           return { name: c.name, count, percent: totalAssets>0?Math.round((count/totalAssets)*100):0 };
         })
         .sort((a,b)=>b.count-a.count)
-        .map(r => `
-          <div class="flex items-center justify-between p-4 rounded-xl border bg-slate-50">
-            <div>
-              <div class="font-bold">${r.name}</div>
-              <div class="text-xs text-slate-500">${r.percent}% ของทั้งหมด</div>
+        .map((r, index) => {
+          const colors = ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-pink-500'];
+          const colorClass = colors[index % colors.length];
+          return `
+          <div class="group">
+            <div class="flex justify-between items-end mb-1">
+              <span class="font-bold text-slate-700 text-sm group-hover:text-blue-600 transition-colors">${r.name}</span>
+              <span class="text-sm font-extrabold text-slate-800">${r.count} <span class="text-[10px] text-slate-400 font-normal">(${r.percent}%)</span></span>
             </div>
-            <div class="text-2xl font-extrabold text-blue-600">${r.count}</div>
+            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+              <div class="${colorClass} h-2.5 rounded-full transition-all duration-1000 ease-out" style="width: ${r.percent}%"></div>
+            </div>
           </div>
-        `).join("");
+        `}).join("");
     }
 
     // --- Hardware Scanner Logic ---
@@ -2007,7 +2102,6 @@
       
       let targetAssetNo = scannedText.trim();
       
-      // ดักจับกรณีปืนสแกนเนอร์ยิง QR Code จะได้มาเป็นลิงก์ URL เต็ม ให้ตัดเอาแค่เลขทะเบียน
       if (targetAssetNo.includes('?view=') || targetAssetNo.includes('?assetNo=')) {
          try {
             const parsedUrl = new URL(targetAssetNo);
