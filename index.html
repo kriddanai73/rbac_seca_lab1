@@ -23,6 +23,7 @@
             --success: #059669;
         }
 
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -727,18 +728,18 @@
             width: 100%;
             max-width: 800px;
             background: white;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             border-radius: 4px;
             overflow: hidden;
             position: relative;
         }
-        
+
         .preview-notice {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.6);
             color: white;
             text-align: center;
             padding: 8px;
@@ -767,32 +768,153 @@
         }
 
         /* Global Print Classes (Extracted from @media print) */
-        .print-header { display: flex; align-items: flex-start; margin-bottom: 5px; }
-        .print-logo-box { width: 90px; margin-right: 15px; }
-        .print-logo { width: 100%; height: auto; object-fit: contain; }
-        .print-company-name { font-weight: bold; font-size: 15px; margin-bottom: 3px; }
-        .print-company-address, .print-company-contact { font-size: 12px; }
-        .print-divider { border-bottom: 2px dotted #000; margin: 5px 0; }
-        .print-date-row { text-align: right; margin-bottom: 5px; font-size: 13px; }
-        .print-title { text-align: center; font-size: 19px; font-weight: bold; margin: 5px 0 10px 0; }
-        .print-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .print-flex-row { display: flex; gap: 40px; margin-top: 15px; }
-        .print-col-left { flex: 1; }
-        .print-col-right { flex: 1; }
-        .print-field { display: flex; align-items: baseline; }
-        .print-field span:first-child { width: 80px; font-weight: bold; }
-        .print-line { border-bottom: 1px dotted #000; display: inline-block; min-height: 16px; text-align: center; padding: 0 5px; font-weight: bold; font-size: 15px; }
-        .flex-1 { flex: 1; }
-        .print-section-title { font-weight: bold; font-size: 16px; margin-bottom: 10px; margin-top: 15px; }
-        .print-checkbox-list > div { margin-bottom: 8px; display: flex; align-items: center; }
-        .print-chk { display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px; }
-        .print-sub-list { padding-left: 20px; margin-bottom: 15px; }
-        .print-sub-list > div { margin-bottom: 8px; }
-        .print-note { font-size: 13px; padding-left: 10px; margin-top: 10px; line-height: 1.6; }
-        .print-dim-row { display: flex; align-items: flex-end; white-space: nowrap; margin-bottom: 12px; }
-        .print-dim-list { padding-left: 10px; }
-        .print-dim-list > div { margin-bottom: 10px; }
-        .print-footer { margin-top: auto !important; padding-bottom: 5px; }
+        .print-header {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 5px;
+        }
+
+        .print-logo-box {
+            width: 90px;
+            margin-right: 15px;
+        }
+
+        .print-logo {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .print-company-name {
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 3px;
+        }
+
+        .print-company-address,
+        .print-company-contact {
+            font-size: 12px;
+        }
+
+        .print-divider {
+            border-bottom: 2px dotted #000;
+            margin: 5px 0;
+        }
+
+        .print-date-row {
+            text-align: right;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .print-title {
+            text-align: center;
+            font-size: 19px;
+            font-weight: bold;
+            margin: 5px 0 10px 0;
+        }
+
+        .print-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .print-flex-row {
+            display: flex;
+            gap: 40px;
+            margin-top: 15px;
+        }
+
+        .print-col-left {
+            flex: 1;
+        }
+
+        .print-col-right {
+            flex: 1;
+        }
+
+        .print-field {
+            display: flex;
+            align-items: baseline;
+        }
+
+        .print-field span:first-child {
+            width: 80px;
+            font-weight: bold;
+        }
+
+        .print-line {
+            border-bottom: 1px dotted #000;
+            display: inline-block;
+            min-height: 16px;
+            text-align: center;
+            padding: 0 5px;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .flex-1 {
+            flex: 1;
+        }
+
+        .print-section-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+            margin-top: 15px;
+        }
+
+        .print-checkbox-list>div {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .print-chk {
+            display: inline-block;
+            width: 40px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 20px;
+            margin-right: 5px;
+        }
+
+        .print-sub-list {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .print-sub-list>div {
+            margin-bottom: 8px;
+        }
+
+        .print-note {
+            font-size: 13px;
+            padding-left: 10px;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        .print-dim-row {
+            display: flex;
+            align-items: flex-end;
+            white-space: nowrap;
+            margin-bottom: 12px;
+        }
+
+        .print-dim-list {
+            padding-left: 10px;
+        }
+
+        .print-dim-list>div {
+            margin-bottom: 10px;
+        }
+
+        .print-footer {
+            margin-top: auto !important;
+            padding-bottom: 5px;
+        }
 
         @media print {
             @page {
@@ -800,13 +922,16 @@
                 margin: 8mm;
             }
 
-            html, body {
+            html,
+            body {
                 height: 100%;
                 margin: 0 !important;
                 padding: 0 !important;
             }
 
-            .app-container, .loading-overlay, .preview-mode-container {
+            .app-container,
+            .loading-overlay,
+            .preview-mode-container {
                 display: none !important;
             }
 
@@ -1203,7 +1328,9 @@
             <div class="preview-notice">กดค้างที่รูปภาพเพื่อบันทึก หรือแชร์</div>
             <img id="doc-preview-img" src="" alt="Document Preview">
         </div>
-        <button class="btn btn-secondary" style="margin-top: 20px; width: 100%; max-width: 800px; padding: 12px; font-weight: normal;" onclick="window.print()">🖨️ พิมพ์ผ่านเครื่องปริ้น (Print)</button>
+        <button class="btn btn-secondary"
+            style="margin-top: 20px; width: 100%; max-width: 800px; padding: 12px; font-weight: normal;"
+            onclick="window.print()">🖨️ พิมพ์ผ่านเครื่องปริ้น (Print)</button>
     </div>
 
     <!-- Hidden Print View Template -->
@@ -1211,18 +1338,23 @@
         <!-- Header -->
         <div class="print-header" style="display: flex; align-items: flex-start; margin-bottom: 10px;">
             <div class="print-logo-box" style="width: 90px; margin-right: 20px;">
-                <img src="88 TMAX logo-01.jpg" alt="TMAX Logo" class="print-logo" style="width: 100%; height: auto; object-fit: contain;" />
+                <img src="88 TMAX logo-01.jpg" alt="TMAX Logo" class="print-logo"
+                    style="width: 100%; height: auto; object-fit: contain;" />
             </div>
             <div class="print-company-info">
-                <div class="print-company-name" style="font-size: 16px; font-weight: bold; margin-bottom: 4px;">TMAX Corporation Co.,Ltd.</div>
-                <div class="print-company-address" style="font-size: 13px; line-height: 1.5;">655/8-9 Soi Ladprao 101 (Watbuengthonglang) Klong Chaokhunsing, Wangthonglang Bangkok 10130</div>
-                <div class="print-company-contact" style="font-size: 13px; line-height: 1.5;">Tel : 0-2731-4788 Fax : 0-2731-4933 Hot Line : 086-999-8090 E-mail : mi@t-maxcorp.com</div>
+                <div class="print-company-name" style="font-size: 16px; font-weight: bold; margin-bottom: 4px;">TMAX
+                    Corporation Co.,Ltd.</div>
+                <div class="print-company-address" style="font-size: 13px; line-height: 1.5;">655/8-9 Soi Ladprao 101
+                    (Watbuengthonglang) Klong Chaokhunsing, Wangthonglang Bangkok 10130</div>
+                <div class="print-company-contact" style="font-size: 13px; line-height: 1.5;">Tel : 0-2731-4788 Fax :
+                    0-2731-4933 Hot Line : 086-999-8090 E-mail : mi@t-maxcorp.com</div>
             </div>
         </div>
 
         <div class="print-divider" style="border-bottom: 2px dotted #000; margin: 10px 0;"></div>
 
-        <div class="print-date-row" style="display: flex; justify-content: flex-end; gap: 20px; font-size: 14px; margin-bottom: 10px;">
+        <div class="print-date-row"
+            style="display: flex; justify-content: flex-end; gap: 20px; font-size: 14px; margin-bottom: 10px;">
             <div>
                 <span>เลขที่ฟอร์ม</span>
                 <span class="print-line" style="width: 150px; text-align: center;" id="p-form-no"></span>
@@ -1233,10 +1365,12 @@
             </div>
         </div>
 
-        <h1 class="print-title" style="font-size: 22px; text-align: center; font-weight: bold; margin: 10px 0 10px 0;">ใบขอราคางานสั่งทำ แอล-โบลท์ (L-Bolt)</h1>
+        <h1 class="print-title" style="font-size: 22px; text-align: center; font-weight: bold; margin: 10px 0 10px 0;">
+            ใบขอราคางานสั่งทำ แอล-โบลท์ (L-Bolt)</h1>
 
         <!-- Customer Info -->
-        <div class="print-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 10px;">
+        <div class="print-grid-2"
+            style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 10px;">
             <div>
                 <div class="print-field">
                     <span>ชื่อลูกค้า :</span>
@@ -1264,42 +1398,79 @@
             <div class="print-col-left" style="flex: 1;">
                 <div class="print-section-title">1.1 เกรดเหล็ก</div>
                 <div class="print-checkbox-list">
-                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk" id="p-chk-ss400" style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span> SS400 (A36) เกรดธรรมดา 4.6</div>
-                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk" id="p-chk-s45c" style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span> S45C (A307) เหล็กแข็ง</div>
-                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk" id="p-chk-scm440" style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span> SCM440 (A325) เหล็กแข็ง</div>
-                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk" id="p-chk-ss304" style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span> Stainless SS304 (A2)</div>
-                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk" id="p-chk-ss316" style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span> Stainless SS316 (A4)</div>
+                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk"
+                            id="p-chk-ss400"
+                            style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span>
+                        SS400 (A36) เกรดธรรมดา 4.6</div>
+                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk"
+                            id="p-chk-s45c"
+                            style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span>
+                        S45C (A307) เหล็กแข็ง</div>
+                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk"
+                            id="p-chk-scm440"
+                            style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span>
+                        SCM440 (A325) เหล็กแข็ง</div>
+                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk"
+                            id="p-chk-ss304"
+                            style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span>
+                        Stainless SS304 (A2)</div>
+                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk"
+                            id="p-chk-ss316"
+                            style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span>
+                        Stainless SS316 (A4)</div>
                 </div>
 
-                <div class="print-section-title mt-6" style="margin-top: 15px;">1.3 จำนวน <span class="print-line" style="width: 80px;" id="p-qty"></span> ชุด</div>
+                <div class="print-section-title mt-6" style="margin-top: 15px;">1.3 จำนวน <span class="print-line"
+                        style="width: 80px;" id="p-qty"></span> ชุด</div>
                 <div class="print-sub-list">
-                    <div>- จำนวนน็อตตัวเมีย (Nut) <span class="print-line" style="width: 50px;" id="p-qty-nut"></span> ตัว</div>
-                    <div>- จำนวนแหวนอีแปะ (Washer) <span class="print-line" style="width: 50px;" id="p-qty-washer"></span> ตัว</div>
-                    <div>- จำนวนแหวนสปริง (Spring Washer) <span class="print-line" style="width: 50px;" id="p-qty-spring"></span> ตัว</div>
+                    <div>- จำนวนน็อตตัวเมีย (Nut) <span class="print-line" style="width: 50px;" id="p-qty-nut"></span>
+                        ตัว</div>
+                    <div>- จำนวนแหวนอีแปะ (Washer) <span class="print-line" style="width: 50px;"
+                            id="p-qty-washer"></span> ตัว</div>
+                    <div>- จำนวนแหวนสปริง (Spring Washer) <span class="print-line" style="width: 50px;"
+                            id="p-qty-spring"></span> ตัว</div>
                 </div>
 
                 <div class="print-section-title mt-6" style="margin-top: 15px;">1.4 ลักษณะการชุบ</div>
                 <div class="print-checkbox-list">
-                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk" id="p-chk-black" style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span> ไม่ชุบ (Black)</div>
-                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk" id="p-chk-zinc" style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span> ชุบขาว หนา 5 ไมครอน (Zinc)</div>
-                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk" id="p-chk-hdg" style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span> ชุบฮอทดิบ หนา 50 ไมครอน (Hot Dipped Galvanised)</div>
-                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk" id="p-chk-other" style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span> อื่นๆ <span class="print-line" style="width: 150px; border-bottom: 1px dotted #000; display: inline-block; min-height: 16px; text-align: center; padding: 0 5px; font-weight: bold; font-size: 15px;" id="p-coat-other"></span></div>
+                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk"
+                            id="p-chk-black"
+                            style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span>
+                        ไม่ชุบ (Black)</div>
+                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk"
+                            id="p-chk-zinc"
+                            style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span>
+                        ชุบขาว หนา 5 ไมครอน (Zinc)</div>
+                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk"
+                            id="p-chk-hdg"
+                            style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span>
+                        ชุบฮอทดิบ หนา 50 ไมครอน (Hot Dipped Galvanised)</div>
+                    <div style="margin-bottom: 8px; display: flex; align-items: center;"><span class="print-chk"
+                            id="p-chk-other"
+                            style="display: inline-block; width: 40px; text-align: center; font-weight: bold; font-size: 20px; margin-right: 5px;">.....</span>
+                        อื่นๆ <span class="print-line"
+                            style="width: 150px; border-bottom: 1px dotted #000; display: inline-block; min-height: 16px; text-align: center; padding: 0 5px; font-weight: bold; font-size: 15px;"
+                            id="p-coat-other"></span></div>
                 </div>
                 <div class="print-note mt-1">
                     ** สำหรับ การชุบ Hot Dipped Galvanised<br>
-                    หากต้องการความหนาพิเศษต้องระบุ <span class="print-line" style="width: 50px;" id="p-hdg-thick"></span> ไมครอน
+                    หากต้องการความหนาพิเศษต้องระบุ <span class="print-line" style="width: 50px;"
+                        id="p-hdg-thick"></span> ไมครอน
                 </div>
 
-                <div class="print-section-title mt-6" style="margin-top: 20px;">1.5 วันที่ต้องการสินค้า <span class="print-line" style="width: 150px;" id="p-date-req"></span></div>
+                <div class="print-section-title mt-6" style="margin-top: 20px;">1.5 วันที่ต้องการสินค้า <span
+                        class="print-line" style="width: 150px;" id="p-date-req"></span></div>
 
-                <div class="print-section-title mt-4" style="margin-top: 20px; white-space: nowrap;">1.6 ราคา <span class="print-line" style="width: 150px;"></span> / (.....) ชุด, (.....) ตัว</div>
+                <div class="print-section-title mt-4" style="margin-top: 20px; white-space: nowrap;">1.6 ราคา <span
+                        class="print-line" style="width: 150px;"></span> / (.....) ชุด, (.....) ตัว</div>
             </div>
 
             <!-- Right Column (Image & Dimensions) -->
             <div class="print-col-right" style="flex: 1;">
                 <div class="print-section-title" style="margin-bottom: 10px;">1.2 ขนาดเส้นผ่านศูนย์กลาง (Diameter)</div>
                 <div class="print-dim-row">
-                    D เกลียวมิล <span class="print-line" style="width: 50px;" id="p-dim-mm"></span> มม. หรือ เกลียวหุน <span class="print-line" style="width: 50px;" id="p-dim-inch"></span> นิ้ว
+                    D เกลียวมิล <span class="print-line" style="width: 50px;" id="p-dim-mm"></span> มม. หรือ เกลียวหุน
+                    <span class="print-line" style="width: 50px;" id="p-dim-inch"></span> นิ้ว
                 </div>
                 <div class="print-dim-row mt-2" style="margin-top: 15px;">ความยาวของ L-Bolt</div>
                 <div class="print-dim-list" style="margin-top: 10px;">
@@ -1311,38 +1482,52 @@
                 <div class="print-drawing-box mt-4" style="margin-top: 10px; text-align: right; padding-right: 20px;">
                     <svg viewBox="0 0 300 450" class="print-svg" style="width: 290px; height: auto;">
                         <defs>
-                            <marker id="p-arrow-start" markerWidth="14" markerHeight="14" refX="14" refY="7" orient="auto-start-reverse">
-                                <path d="M 0 1 L 14 7 L 0 13 Z" fill="black"/>
+                            <marker id="p-arrow-start" markerWidth="14" markerHeight="14" refX="14" refY="7"
+                                orient="auto-start-reverse">
+                                <path d="M 0 1 L 14 7 L 0 13 Z" fill="black" />
                             </marker>
-                            <marker id="p-arrow-end" markerWidth="14" markerHeight="14" refX="14" refY="7" orient="auto">
-                                <path d="M 0 1 L 14 7 L 0 13 Z" fill="black"/>
+                            <marker id="p-arrow-end" markerWidth="14" markerHeight="14" refX="14" refY="7"
+                                orient="auto">
+                                <path d="M 0 1 L 14 7 L 0 13 Z" fill="black" />
                             </marker>
                         </defs>
                         <!-- L-Bolt Outline -->
-                        <path d="M 130 70 L 130 320 Q 130 380 190 380 L 260 380 L 260 340 L 190 340 Q 170 340 170 320 L 170 70 Z" fill="white" stroke="black" stroke-width="2.5" stroke-linejoin="round" />
+                        <path
+                            d="M 130 70 L 130 320 Q 130 380 190 380 L 260 380 L 260 340 L 190 340 Q 170 340 170 320 L 170 70 Z"
+                            fill="white" stroke="black" stroke-width="2.5" stroke-linejoin="round" />
 
                         <!-- Threads -->
-                        <path d="M 130 80 L 170 80 M 130 90 L 170 90 M 130 100 L 170 100 M 130 110 L 170 110 M 130 120 L 170 120 M 130 130 L 170 130 M 130 140 L 170 140 M 130 150 L 170 150 M 130 160 L 170 160 M 130 170 L 170 170" stroke="black" stroke-width="1.5"/>
+                        <path
+                            d="M 130 80 L 170 80 M 130 90 L 170 90 M 130 100 L 170 100 M 130 110 L 170 110 M 130 120 L 170 120 M 130 130 L 170 130 M 130 140 L 170 140 M 130 150 L 170 150 M 130 160 L 170 160 M 130 170 L 170 170"
+                            stroke="black" stroke-width="1.5" />
 
                         <!-- D Dimension -->
-                        <path d="M 130 45 L 130 65 M 170 45 L 170 65" stroke="black" stroke-width="1.5"/>
-                        <line x1="130" y1="55" x2="170" y2="55" stroke="black" stroke-width="1.5" marker-start="url(#p-arrow-start)" marker-end="url(#p-arrow-end)" />
-                        <text id="p-svg-d-text" x="150" y="45" text-anchor="middle" font-family="sans-serif" font-size="20" fill="black">D</text>
+                        <path d="M 130 45 L 130 65 M 170 45 L 170 65" stroke="black" stroke-width="1.5" />
+                        <line x1="130" y1="55" x2="170" y2="55" stroke="black" stroke-width="1.5"
+                            marker-start="url(#p-arrow-start)" marker-end="url(#p-arrow-end)" />
+                        <text id="p-svg-d-text" x="150" y="45" text-anchor="middle" font-family="sans-serif"
+                            font-size="20" fill="black">D</text>
 
                         <!-- Lt Dimension -->
                         <path d="M 175 70 L 190 70 M 175 170 L 190 170" stroke="black" stroke-width="1.5" />
-                        <line x1="185" y1="70" x2="185" y2="170" stroke="black" stroke-width="1.5" marker-start="url(#p-arrow-start)" marker-end="url(#p-arrow-end)"/>
-                        <text id="p-svg-lt-text" x="200" y="127" text-anchor="start" font-family="sans-serif" font-size="20" fill="black">Lt</text>
+                        <line x1="185" y1="70" x2="185" y2="170" stroke="black" stroke-width="1.5"
+                            marker-start="url(#p-arrow-start)" marker-end="url(#p-arrow-end)" />
+                        <text id="p-svg-lt-text" x="200" y="127" text-anchor="start" font-family="sans-serif"
+                            font-size="20" fill="black">Lt</text>
 
                         <!-- L1 Dimension -->
                         <path d="M 125 70 L 105 70 M 125 380 L 105 380" stroke="black" stroke-width="1.5" />
-                        <line x1="110" y1="70" x2="110" y2="380" stroke="black" stroke-width="1.5" marker-start="url(#p-arrow-start)" marker-end="url(#p-arrow-end)"/>
-                        <text id="p-svg-l1-text" x="90" y="232" text-anchor="end" font-family="sans-serif" font-size="20" fill="black">L1</text>
+                        <line x1="110" y1="70" x2="110" y2="380" stroke="black" stroke-width="1.5"
+                            marker-start="url(#p-arrow-start)" marker-end="url(#p-arrow-end)" />
+                        <text id="p-svg-l1-text" x="90" y="232" text-anchor="end" font-family="sans-serif"
+                            font-size="20" fill="black">L1</text>
 
                         <!-- L2 Dimension -->
                         <path d="M 130 385 L 130 410 M 260 385 L 260 410" stroke="black" stroke-width="1.5" />
-                        <line x1="130" y1="400" x2="260" y2="400" stroke="black" stroke-width="1.5" marker-start="url(#p-arrow-start)" marker-end="url(#p-arrow-end)"/>
-                        <text id="p-svg-l2-text" x="195" y="432" text-anchor="middle" font-family="sans-serif" font-size="20" fill="black">L2</text>
+                        <line x1="130" y1="400" x2="260" y2="400" stroke="black" stroke-width="1.5"
+                            marker-start="url(#p-arrow-start)" marker-end="url(#p-arrow-end)" />
+                        <text id="p-svg-l2-text" x="195" y="432" text-anchor="middle" font-family="sans-serif"
+                            font-size="20" fill="black">L2</text>
                     </svg>
                 </div>
             </div>
@@ -1357,15 +1542,18 @@
                     <div>* Hot Dipped Galvanised ระยะเวลาผลิตประมาณ 15 วัน</div>
                 </div>
                 <div style="padding-top: 15px;">
-                    <div style="margin-bottom: 15px;">พนักงานขาย <span class="print-line" style="width: 150px;"></span></div>
+                    <div style="margin-bottom: 15px;">พนักงานขาย <span class="print-line" style="width: 150px;"></span>
+                    </div>
                     <div>สาขา <span class="print-line" style="width: 150px; margin-left: 31px;"></span></div>
                 </div>
             </div>
 
-            <div class="print-warning mt-6" style="margin-top: 10px; text-align: center; font-style: italic; font-weight: bold; font-size: 14px;">
+            <div class="print-warning mt-6"
+                style="margin-top: 10px; text-align: center; font-style: italic; font-weight: bold; font-size: 14px;">
                 * สินค้าประเภทงานสั่งทำ หากยืนยันการผลิตแล้วทางบริษัทฯ ไม่รับคืนสินค้า *
             </div>
-            <div class="print-doc-id" style="text-align: right; margin-top: 10px; font-weight: normal; font-size: 11px;">
+            <div class="print-doc-id"
+                style="text-align: right; margin-top: 10px; font-weight: normal; font-size: 11px;">
                 FM-PUR-010 RVE.00 (14/11/2563)
             </div>
         </div>
@@ -1657,7 +1845,7 @@
                     backgroundColor: '#ffffff'
                 }).then(canvas => {
                     printView.classList.remove('capture-mode');
-                    
+
                     const imgUrl = canvas.toDataURL("image/jpeg", 0.90);
                     document.getElementById('doc-preview-img').src = imgUrl;
 
