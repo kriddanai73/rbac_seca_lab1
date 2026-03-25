@@ -1,0 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import './styles/form.css';
+@import './styles/pdf.css';
+@import './styles/paper-form.css';
+
+:root {
+  /* Vibrant Colors */
+  --primary-color: #4f46e5;
+  /* Indigo */
+  --primary-hover: #4338ca;
+  --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --secondary-color: #64748b;
+  --bg-color: #f1f5f9;
+  --card-bg: rgba(255, 255, 255, 0.85);
+  /* Glassmorphism base */
+  --text-dark: #0f172a;
+  --text-light: #64748b;
+  --border-color: rgba(203, 213, 225, 0.6);
+  --error-color: #ef4444;
+  --success-color: #10b981;
+
+  /* Modern soft radius */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+
+  /* Dynamic shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 10px 30px -5px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 20px 40px -10px rgba(79, 70, 229, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Sarabun', 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  /* Beautiful mesh gradient background */
+  background:
+    radial-gradient(circle at top left, #e0e7ff, transparent 40%),
+    radial-gradient(circle at bottom right, #fae8ff, transparent 40%),
+    radial-gradient(circle at 50% 50%, #f1f5f9, transparent 60%);
+  background-attachment: fixed;
+  color: var(--text-dark);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+.app-container {
+  min-height: 100vh;
+  padding: 2.5rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: var(--text-dark);
+  text-align: center;
+  letter-spacing: -0.5px;
+}
+
+/* Glassmorphism Form Container */
+.form-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 3rem;
+  margin-bottom: 2.5rem;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInSlideUp 0.4s ease-out forwards;
+}
+
+@keyframes fadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    padding: 1rem;
+  }
+
+  .form-card {
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+  }
+}
+
+/* Beautiful Modern Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Sarabun', sans-serif;
+  letter-spacing: 0.3px;
+}
+
+.btn-primary {
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  border: none;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-outline {
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-outline:hover {
+  background-color: var(--primary-color);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+}
+
+/* Action Buttons specific for forms */
+.btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  border: none;
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.btn-danger {
+  background: transparent;
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
+}
+
+.btn-danger:hover {
+  background: var(--error-color);
+  color: white;
+}
+
+/* Visibility Control */
+.print-only {
+  display: none !important;
+}
+
+@media print {
+  body {
+    background: white !important;
+  }
+
+  .screen-only {
+    display: none !important;
+  }
+
+  .print-only.paper-container {
+    display: flex !important;
+  }
+
+  .print-only:not(.paper-container) {
+    display: block !important;
+  }
+}
