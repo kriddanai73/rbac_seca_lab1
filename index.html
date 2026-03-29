@@ -4727,9 +4727,32 @@
             }
         }
 
+        let printFallbackTimer = null;
+
+        function finishPrintFlow() {
+            const overlay = document.getElementById('loading-overlay');
+            const loadText = document.getElementById('loading-text');
+
+            if (printFallbackTimer) {
+                clearTimeout(printFallbackTimer);
+                printFallbackTimer = null;
+            }
+
+            if (overlay) overlay.classList.add('success');
+            if (loadText) {
+                loadText.innerText = 'เสร็จสิ้น!';
+                loadText.style.color = 'var(--success)';
+            }
+
+            setTimeout(() => {
+                if (overlay) overlay.classList.remove('active', 'success');
+            }, 1000);
+        }
+
         function submitData() {
             const overlay = document.getElementById('loading-overlay');
             const loadText = document.getElementById('loading-text');
+            const submitBtn = document.getElementById('btn-submit');
 
             if (typeof populatePrintView === 'function') {
                 populatePrintView();
@@ -4737,24 +4760,36 @@
 
             if (overlay) overlay.classList.add('active');
             if (loadText) {
-                loadText.innerText = 'กำลังเตรียมเอกสาร PDF...';
+                loadText.innerText = 'กำลังเปิดหน้าพิมพ์...';
                 loadText.style.color = 'var(--text-main)';
             }
 
-            setTimeout(() => {
+            if (submitBtn) submitBtn.disabled = true;
+
+            // บังคับให้ DOM render ให้เสร็จก่อน แล้วค่อยสั่ง print แบบยังอยู่ใน user gesture
+            document.body.offsetHeight;
+            if (overlay) overlay.offsetHeight;
+
+            printFallbackTimer = setTimeout(() => {
+                finishPrintFlow();
+                if (submitBtn) submitBtn.disabled = false;
+            }, 1500);
+
+            try {
+                window.focus();
                 window.print();
-
-                if (overlay) overlay.classList.add('success');
-                if (loadText) {
-                    loadText.innerText = 'เสร็จสิ้น!';
-                    loadText.style.color = 'var(--success)';
-                }
-
-                setTimeout(() => {
-                    if (overlay) overlay.classList.remove('active', 'success');
-                }, 1000);
-            }, 300);
+            } catch (err) {
+                finishPrintFlow();
+                if (submitBtn) submitBtn.disabled = false;
+                console.error('Print failed:', err);
+            }
         }
+
+        window.addEventListener('afterprint', () => {
+            finishPrintFlow();
+            const submitBtn = document.getElementById('btn-submit');
+            if (submitBtn) submitBtn.disabled = false;
+        });
 
         /* ===== HELPER FUNCTIONS & INIT ===== */
         function getCoatingKey(val) {
