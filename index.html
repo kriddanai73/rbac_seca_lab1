@@ -1751,6 +1751,11 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             position: relative;
             overflow: hidden;
+            z-index: 5;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
 
         .product-card:nth-child(1) {
@@ -1805,6 +1810,15 @@
 
         .product-card:active {
             transform: translateY(-1px);
+        }
+
+        .product-card * {
+            pointer-events: none;
+        }
+
+        .product-card.tap-active {
+            transform: scale(0.985);
+            box-shadow: 0 6px 16px -6px rgba(2, 132, 199, 0.18);
         }
 
         .product-card-icon-wrapper {
@@ -2121,7 +2135,7 @@
             <p>กรุณาเลือกชนิดสินค้าที่ต้องการขอราคา</p>
         </div>
         <div class="product-grid">
-            <div class="product-card" onclick="selectProduct('i-bolt')">
+            <div class="product-card" role="button" tabindex="0" data-product="i-bolt" onclick="selectProduct('i-bolt')">
                 <div class="product-card-icon-wrapper"><svg class="product-card-icon" fill="none" stroke="currentColor"
                         stroke-linecap="round" stroke-linejoin="round" viewbox="0 0 100 100">
                         <line x1="50" x2="50" y1="15" y2="85"></line>
@@ -2132,7 +2146,7 @@
                 <div class="product-card-text"><span class="product-card-name">ไอ-โบลท์</span><span
                         class="product-card-sub">I-Bolt</span></div>
             </div>
-            <div class="product-card" onclick="selectProduct('j-bolt')">
+            <div class="product-card" role="button" tabindex="0" data-product="j-bolt" onclick="selectProduct('j-bolt')">
                 <div class="product-card-icon-wrapper"><svg class="product-card-icon" fill="none" stroke="currentColor"
                         stroke-linecap="round" stroke-linejoin="round" viewbox="0 0 100 100">
                         <line x1="60" x2="60" y1="10" y2="60"></line>
@@ -2144,7 +2158,7 @@
                 <div class="product-card-text"><span class="product-card-name">เจ-โบลท์</span><span
                         class="product-card-sub">J-Bolt</span></div>
             </div>
-            <div class="product-card" onclick="selectProduct('j-bolt-snake')">
+            <div class="product-card" role="button" tabindex="0" data-product="j-bolt-snake" onclick="selectProduct('j-bolt-snake')">
                 <div class="product-card-icon-wrapper"><svg class="product-card-icon" fill="none" stroke="currentColor"
                         stroke-linecap="round" stroke-linejoin="round" viewbox="0 0 100 100">
                         <line x1="65" x2="65" y1="10" y2="60"></line>
@@ -2155,7 +2169,7 @@
                 <div class="product-card-text"><span class="product-card-name">เจ-โบลท์ งองู</span><span
                         class="product-card-sub">J-Bolt (Snake)</span></div>
             </div>
-            <div class="product-card" onclick="selectProduct('l-bolt')">
+            <div class="product-card" role="button" tabindex="0" data-product="l-bolt" onclick="selectProduct('l-bolt')">
                 <div class="product-card-icon-wrapper"><svg class="product-card-icon" fill="none" stroke="currentColor"
                         stroke-linecap="round" stroke-linejoin="round" viewbox="0 0 100 100">
                         <line x1="40" x2="40" y1="10" y2="70"></line>
@@ -2167,7 +2181,7 @@
                 <div class="product-card-text"><span class="product-card-name">แอล-โบลท์</span><span
                         class="product-card-sub">L-Bolt</span></div>
             </div>
-            <div class="product-card" onclick="selectProduct('u-bolt')">
+            <div class="product-card" role="button" tabindex="0" data-product="u-bolt" onclick="selectProduct('u-bolt')">
                 <div class="product-card-icon-wrapper"><svg class="product-card-icon" fill="none" stroke="currentColor"
                         stroke-linecap="round" stroke-linejoin="round" viewbox="0 0 100 100">
                         <line x1="25" x2="25" y1="10" y2="50"></line>
@@ -2179,7 +2193,7 @@
                 <div class="product-card-text"><span class="product-card-name">ยูโบลท์</span><span
                         class="product-card-sub">U-Bolt</span></div>
             </div>
-            <div class="product-card" onclick="selectProduct('u-bolt-square')">
+            <div class="product-card" role="button" tabindex="0" data-product="u-bolt-square" onclick="selectProduct('u-bolt-square')">
                 <div class="product-card-icon-wrapper"><svg class="product-card-icon" fill="none" stroke="currentColor"
                         stroke-linecap="round" stroke-linejoin="round" viewbox="0 0 100 100">
                         <line x1="25" x2="25" y1="10" y2="55"></line>
@@ -2191,7 +2205,7 @@
                 <div class="product-card-text"><span class="product-card-name">ยู-โบลท์เหลี่ยม</span><span
                         class="product-card-sub">U-Bolt Square</span></div>
             </div>
-            <div class="product-card" onclick="selectProduct('plate')">
+            <div class="product-card" role="button" tabindex="0" data-product="plate" onclick="selectProduct('plate')">
                 <div class="product-card-icon-wrapper"><svg class="product-card-icon" fill="none" stroke="currentColor"
                         stroke-linecap="round" stroke-linejoin="round" viewbox="0 0 100 100">
                         <rect height="40" rx="4" width="70" x="15" y="30"></rect>
@@ -4727,32 +4741,9 @@
             }
         }
 
-        let printFallbackTimer = null;
-
-        function finishPrintFlow() {
-            const overlay = document.getElementById('loading-overlay');
-            const loadText = document.getElementById('loading-text');
-
-            if (printFallbackTimer) {
-                clearTimeout(printFallbackTimer);
-                printFallbackTimer = null;
-            }
-
-            if (overlay) overlay.classList.add('success');
-            if (loadText) {
-                loadText.innerText = 'เสร็จสิ้น!';
-                loadText.style.color = 'var(--success)';
-            }
-
-            setTimeout(() => {
-                if (overlay) overlay.classList.remove('active', 'success');
-            }, 1000);
-        }
-
         function submitData() {
             const overlay = document.getElementById('loading-overlay');
             const loadText = document.getElementById('loading-text');
-            const submitBtn = document.getElementById('btn-submit');
 
             if (typeof populatePrintView === 'function') {
                 populatePrintView();
@@ -4760,36 +4751,24 @@
 
             if (overlay) overlay.classList.add('active');
             if (loadText) {
-                loadText.innerText = 'กำลังเปิดหน้าพิมพ์...';
+                loadText.innerText = 'กำลังเตรียมเอกสาร PDF...';
                 loadText.style.color = 'var(--text-main)';
             }
 
-            if (submitBtn) submitBtn.disabled = true;
-
-            // บังคับให้ DOM render ให้เสร็จก่อน แล้วค่อยสั่ง print แบบยังอยู่ใน user gesture
-            document.body.offsetHeight;
-            if (overlay) overlay.offsetHeight;
-
-            printFallbackTimer = setTimeout(() => {
-                finishPrintFlow();
-                if (submitBtn) submitBtn.disabled = false;
-            }, 1500);
-
-            try {
-                window.focus();
+            setTimeout(() => {
                 window.print();
-            } catch (err) {
-                finishPrintFlow();
-                if (submitBtn) submitBtn.disabled = false;
-                console.error('Print failed:', err);
-            }
-        }
 
-        window.addEventListener('afterprint', () => {
-            finishPrintFlow();
-            const submitBtn = document.getElementById('btn-submit');
-            if (submitBtn) submitBtn.disabled = false;
-        });
+                if (overlay) overlay.classList.add('success');
+                if (loadText) {
+                    loadText.innerText = 'เสร็จสิ้น!';
+                    loadText.style.color = 'var(--success)';
+                }
+
+                setTimeout(() => {
+                    if (overlay) overlay.classList.remove('active', 'success');
+                }, 1000);
+            }, 300);
+        }
 
         /* ===== HELPER FUNCTIONS & INIT ===== */
         function getCoatingKey(val) {
@@ -4802,6 +4781,27 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.product-card[data-product]').forEach(card => {
+                const productType = card.dataset.product;
+                const openCard = (e) => {
+                    if (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    if (productType) selectProduct(productType);
+                };
+
+                card.addEventListener('click', openCard, { passive: false });
+                card.addEventListener('touchend', openCard, { passive: false });
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') openCard(e);
+                });
+                card.addEventListener('touchstart', () => card.classList.add('tap-active'), { passive: true });
+                ['touchcancel', 'touchend', 'mouseup', 'mouseleave'].forEach(evt => {
+                    card.addEventListener(evt, () => card.classList.remove('tap-active'), { passive: true });
+                });
+            });
+
             ['pw', 'pt'].forEach(key => {
                 const num = document.getElementById(`dim-${key}`);
                 const rng = document.getElementById(`range-${key}`);
