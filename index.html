@@ -4727,6 +4727,247 @@
             }
         }
 
+        function buildPrintPreviewHtml(activePrintView, titleText) {
+            const styleTags = Array.from(document.querySelectorAll('style')).map(style => style.outerHTML).join('\n');
+            const fontLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"], link[href*="fonts.googleapis.com"], link[href*="fonts.gstatic.com"]')).map(link => link.outerHTML).join('\n');
+
+            return `<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>${titleText}</title>
+    ${fontLinks}
+    ${styleTags}
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+            background: #eef2f7 !important;
+            font-family: 'Sarabun', sans-serif;
+        }
+
+        body {
+            color: #0f172a;
+        }
+
+        .preview-topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            pointer-events: none;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .preview-topbar-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 18px 24px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .preview-toolbar {
+            pointer-events: auto;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.96);
+            padding: 12px 16px;
+            border-radius: 16px;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
+        }
+
+        .preview-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .preview-btn:hover {
+            opacity: 0.98;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+        }
+
+        .preview-btn:active {
+            transform: scale(0.98);
+        }
+
+        .preview-btn-primary {
+            background: #0ea5e9;
+            color: #fff;
+        }
+
+        .preview-btn-secondary {
+            background: #475569;
+            color: #fff;
+        }
+
+        .preview-hint {
+            pointer-events: auto;
+            text-align: center;
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.45;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .preview-stage {
+            min-height: 100vh;
+            padding: 124px 24px 40px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            box-sizing: border-box;
+            background: #eef2f7;
+        }
+
+        .preview-sheet {
+            width: 210mm;
+            min-height: 297mm;
+            background: #fff;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.14);
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .preview-sheet .print-only {
+            display: block !important;
+            position: relative !important;
+            width: 100% !important;
+            min-height: 297mm !important;
+            box-sizing: border-box !important;
+            background: #fff !important;
+            color: #000 !important;
+            font-family: 'Sarabun', sans-serif !important;
+            font-size: 15px !important;
+            line-height: 1.5 !important;
+            padding: 5mm 15mm 0mm 15mm !important;
+        }
+
+        @media (max-width: 900px) {
+            .preview-topbar-inner {
+                padding: 12px 12px 0;
+            }
+
+            .preview-toolbar {
+                width: min(100%, 420px);
+                flex-wrap: wrap;
+            }
+
+            .preview-btn {
+                flex: 1 1 160px;
+            }
+
+            .preview-hint {
+                max-width: min(100%, 420px);
+                font-size: 13px;
+                padding: 0 4px;
+            }
+
+            .preview-stage {
+                padding: 132px 8px 32px;
+                overflow-x: auto;
+                justify-content: flex-start;
+            }
+
+            .preview-sheet {
+                width: 210mm;
+                min-width: 210mm;
+            }
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 0;
+            }
+
+            html, body {
+                background: #fff !important;
+            }
+
+            .preview-topbar,
+            .preview-toolbar,
+            .preview-hint {
+                display: none !important;
+            }
+
+            .preview-stage {
+                padding: 0 !important;
+                background: #fff !important;
+                display: block !important;
+                min-height: auto !important;
+            }
+
+            .preview-sheet {
+                width: 210mm !important;
+                min-width: 210mm !important;
+                min-height: 297mm !important;
+                box-shadow: none !important;
+                overflow: visible !important;
+            }
+
+            .preview-sheet .print-only {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-topbar">
+        <div class="preview-topbar-inner">
+            <div class="preview-toolbar">
+                <button class="preview-btn preview-btn-primary" onclick="window.print()">พิมพ์ / บันทึก PDF</button>
+                <button class="preview-btn preview-btn-secondary" onclick="window.close()">ปิดหน้านี้</button>
+            </div>
+            <div class="preview-hint">เปิดเอกสารแบบปกติก่อน แล้วค่อยกดพิมพ์ เพื่อไม่ให้ขนาดเพี้ยนหรือเด้งหน้าพิมพ์ทันที</div>
+        </div>
+    </div>
+    <div class="preview-stage">
+        <div class="preview-sheet">${activePrintView.outerHTML}</div>
+    </div>
+</body>
+</html>`;
+        }
+
+        function openPrintPreviewWindow() {
+            const activePrintView = currentProduct && currentProduct.isPlate
+                ? document.getElementById('print-view-plate')
+                : document.getElementById('print-view');
+
+            if (!activePrintView) {
+                alert('ไม่พบเอกสารสำหรับพิมพ์');
+                return false;
+            }
+
+            const previewWindow = window.open('', '_blank');
+            if (!previewWindow) {
+                alert('เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต Pop-up แล้วลองใหม่อีกครั้ง');
+                return false;
+            }
+
+            const titleText = currentProduct ? `Quotation - ${currentProduct.name}` : 'Quotation Preview';
+            const html = buildPrintPreviewHtml(activePrintView, titleText);
+            previewWindow.document.open();
+            previewWindow.document.write(html);
+            previewWindow.document.close();
+            return true;
+        }
+
         function submitData() {
             const overlay = document.getElementById('loading-overlay');
             const loadText = document.getElementById('loading-text');
@@ -4735,25 +4976,27 @@
                 populatePrintView();
             }
 
+            if (typeof populatePlatePrint === 'function' && currentProduct && currentProduct.isPlate) {
+                populatePlatePrint();
+            }
+
             if (overlay) overlay.classList.add('active');
             if (loadText) {
-                loadText.innerText = 'กำลังเตรียมเอกสาร PDF...';
+                loadText.innerText = 'กำลังเปิดเอกสารสำหรับพิมพ์...';
                 loadText.style.color = 'var(--text-main)';
             }
 
+            const opened = openPrintPreviewWindow();
+
+            if (overlay) overlay.classList.add(opened ? 'success' : '');
+            if (loadText) {
+                loadText.innerText = opened ? 'เปิดหน้าเอกสารแล้ว' : 'ไม่สามารถเปิดหน้าพิมพ์ได้';
+                loadText.style.color = opened ? 'var(--success)' : 'var(--danger)';
+            }
+
             setTimeout(() => {
-                window.print();
-
-                if (overlay) overlay.classList.add('success');
-                if (loadText) {
-                    loadText.innerText = 'เสร็จสิ้น!';
-                    loadText.style.color = 'var(--success)';
-                }
-
-                setTimeout(() => {
-                    if (overlay) overlay.classList.remove('active', 'success');
-                }, 1000);
-            }, 300);
+                if (overlay) overlay.classList.remove('active', 'success');
+            }, opened ? 1200 : 1800);
         }
 
         /* ===== HELPER FUNCTIONS & INIT ===== */
