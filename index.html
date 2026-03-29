@@ -1863,6 +1863,92 @@
             display: none;
         }
 
+        /* ----- Mobile Document Preview ----- */
+        .mobile-preview-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(15, 23, 42, 0.92);
+            display: none;
+            flex-direction: column;
+            padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+        }
+
+        .mobile-preview-overlay.active {
+            display: flex;
+        }
+
+        .mobile-preview-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .mobile-preview-title {
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .mobile-preview-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mobile-preview-btn {
+            border: none;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .mobile-preview-btn.secondary {
+            background: rgba(255, 255, 255, 0.14);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .mobile-preview-btn.primary {
+            background: #fff;
+            color: #0f172a;
+        }
+
+        .mobile-preview-stage {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 4px 0 20px;
+        }
+
+        .mobile-preview-page-wrap {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .mobile-preview-page {
+            width: 210mm;
+            min-height: 297mm;
+            background: #fff;
+            color: #000;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+            transform-origin: top center;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-preview-overlay {
+                display: none !important;
+            }
+        }
+
         @media print {
             @page {
                 size: A4;
@@ -4727,6 +4813,63 @@
             }
         }
 
+        function isMobileViewport() {
+            return window.innerWidth <= 767;
+        }
+
+        function getActivePrintTemplate() {
+            return document.querySelector('.print-only.active-print');
+        }
+
+        function refreshMobilePrintPreviewScale() {
+            const stage = document.getElementById('mobile-preview-stage');
+            const page = document.getElementById('mobile-preview-page');
+            if (!stage || !page || !page.innerHTML.trim()) return;
+
+            page.style.transform = 'scale(1)';
+            const pageWidth = page.offsetWidth || 794;
+            const pageHeight = page.offsetHeight || Math.round(pageWidth * 1.4142);
+            const availableWidth = Math.max(stage.clientWidth - 12, 280);
+            const availableHeight = Math.max(stage.clientHeight - 12, 320);
+            const scale = Math.min(availableWidth / pageWidth, availableHeight / pageHeight, 1);
+
+            page.style.transform = `scale(${scale})`;
+            page.style.marginBottom = `${Math.max(0, pageHeight * (1 - scale))}px`;
+        }
+
+        function openMobilePrintPreview() {
+            const previewOverlay = document.getElementById('mobile-preview-overlay');
+            const page = document.getElementById('mobile-preview-page');
+            const activeTemplate = getActivePrintTemplate();
+            if (!previewOverlay || !page || !activeTemplate) {
+                window.print();
+                return;
+            }
+
+            page.innerHTML = activeTemplate.innerHTML;
+            previewOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            requestAnimationFrame(() => {
+                refreshMobilePrintPreviewScale();
+            });
+        }
+
+        function closeMobilePrintPreview() {
+            const previewOverlay = document.getElementById('mobile-preview-overlay');
+            if (previewOverlay) previewOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function printFromMobilePreview() {
+            closeMobilePrintPreview();
+            setTimeout(() => {
+                window.print();
+            }, 120);
+        }
+
+        window.addEventListener('resize', refreshMobilePrintPreviewScale);
+
         function submitData() {
             const overlay = document.getElementById('loading-overlay');
             const loadText = document.getElementById('loading-text');
@@ -4742,6 +4885,12 @@
             }
 
             setTimeout(() => {
+                if (isMobileViewport()) {
+                    if (overlay) overlay.classList.remove('active', 'success');
+                    openMobilePrintPreview();
+                    return;
+                }
+
                 window.print();
 
                 if (overlay) overlay.classList.add('success');
@@ -4790,6 +4939,21 @@
         });
 
     </script>
+
+    <div class="mobile-preview-overlay" id="mobile-preview-overlay">
+        <div class="mobile-preview-toolbar">
+            <div class="mobile-preview-title">ตัวอย่างเอกสารสำหรับมือถือ</div>
+            <div class="mobile-preview-actions">
+                <button class="mobile-preview-btn secondary" onclick="closeMobilePrintPreview()" type="button">ปิด</button>
+                <button class="mobile-preview-btn primary" onclick="printFromMobilePreview()" type="button">พิมพ์ / บันทึก PDF</button>
+            </div>
+        </div>
+        <div class="mobile-preview-stage" id="mobile-preview-stage">
+            <div class="mobile-preview-page-wrap">
+                <div class="mobile-preview-page" id="mobile-preview-page"></div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
